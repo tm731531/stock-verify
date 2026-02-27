@@ -1,0 +1,16 @@
+{
+  "total_trades": 18,
+  "winning_trades": 8,
+  "losing_trades": 10,
+  "win_rate": 0.4444444444444444,
+  "avg_profit_pct": 0.04683467354274626,
+  "total_profit_pct": 1.0283949717851821,
+  "annual_return": 0.10395352008895964,
+  "bull_trades": 14,
+  "bear_trades": 4,
+  "by_level": {
+    "level_1": 14,
+    "level_2": 0,
+    "level_3": 4
+  }
+}
