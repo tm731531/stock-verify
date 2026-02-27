@@ -1,0 +1,618 @@
+{
+  "timestamp": "2026-02-27T11:44:03.021990",
+  "period": {
+    "start": "2019-01-02 00:00:00",
+    "end": "2026-02-26 00:00:00"
+  },
+  "data_points": 1732,
+  "initial_capital": 1000000,
+  "rollover_info": {
+    "num_rollovers": 86,
+    "cost_per_roll": 6100,
+    "total_cost": 524600
+  },
+  "strategies": {
+    "均值回歸": {
+      "Total Return (%)": 0.0,
+      "Adjusted Return (%)": -52.46,
+      "Sharpe Ratio": 0.078,
+      "Max Drawdown (%)": -30.33,
+      "Win Rate (%)": 70.6,
+      "Trades": 17,
+      "Final Value": 1000000.0
+    },
+    "SMA趨勢": {
+      "Total Return (%)": 28.66,
+      "Adjusted Return (%)": -23.8,
+      "Sharpe Ratio": 0.291,
+      "Max Drawdown (%)": -33.01,
+      "Win Rate (%)": 66.7,
+      "Trades": 15,
+      "Final Value": 1286622.0
+    },
+    "MACD趨勢": {
+      "Total Return (%)": 5.38,
+      "Adjusted Return (%)": -47.08,
+      "Sharpe Ratio": 0.131,
+      "Max Drawdown (%)": -15.6,
+      "Win Rate (%)": 44.4,
+      "Trades": 72,
+      "Final Value": 1053824.0
+    },
+    "RSI反轉": {
+      "Total Return (%)": 0.0,
+      "Adjusted Return (%)": -52.46,
+      "Sharpe Ratio": 0.075,
+      "Max Drawdown (%)": -29.5,
+      "Win Rate (%)": 71.4,
+      "Trades": 14,
+      "Final Value": 1000000.0
+    },
+    "動量策略": {
+      "Total Return (%)": 28.66,
+      "Adjusted Return (%)": -23.8,
+      "Sharpe Ratio": 0.29,
+      "Max Drawdown (%)": -31.35,
+      "Win Rate (%)": 60.0,
+      "Trades": 20,
+      "Final Value": 1286622.0
+    },
+    "BB突破": {
+      "Total Return (%)": 22.92,
+      "Adjusted Return (%)": -29.54,
+      "Sharpe Ratio": 0.265,
+      "Max Drawdown (%)": -30.57,
+      "Win Rate (%)": 47.1,
+      "Trades": 17,
+      "Final Value": 1229205.0
+    },
+    "SuperTrend": {
+      "Total Return (%)": 0.0,
+      "Adjusted Return (%)": -52.46,
+      "Sharpe Ratio": 0.0,
+      "Max Drawdown (%)": 0.0,
+      "Win Rate (%)": 0.0,
+      "Trades": 0,
+      "Final Value": 1000000.0
+    },
+    "Stochastic": {
+      "Total Return (%)": 0.0,
+      "Adjusted Return (%)": -52.46,
+      "Sharpe Ratio": 0.074,
+      "Max Drawdown (%)": -9.34,
+      "Win Rate (%)": 49.1,
+      "Trades": 344,
+      "Final Value": 1000000.0
+    },
+    "高低突破": {
+      "Total Return (%)": 25.12,
+      "Adjusted Return (%)": -27.34,
+      "Sharpe Ratio": 0.272,
+      "Max Drawdown (%)": -29.2,
+      "Win Rate (%)": 60.0,
+      "Trades": 20,
+      "Final Value": 1251228.0
+    },
+    "多指標": {
+      "Total Return (%)": 0.0,
+      "Adjusted Return (%)": -52.46,
+      "Sharpe Ratio": 0.068,
+      "Max Drawdown (%)": -29.17,
+      "Win Rate (%)": 70.0,
+      "Trades": 10,
+      "Final Value": 1000000.0
+    }
+  },
+  "annual_results": {
+    "均值回歸": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.023,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.095,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2021": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.065,
+        "Trades": 3,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2022": {
+        "Return (%)": -0.23,
+        "Sharpe": 0.087,
+        "Trades": 4,
+        "Win Rate (%)": 25.0,
+        "Final Value": 997718.0
+      },
+      "2023": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.015,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.082,
+        "Trades": 3,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.112,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      }
+    },
+    "SMA趨勢": {
+      "2019": {
+        "Return (%)": 9.87,
+        "Sharpe": 1.415,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1098738.0
+      },
+      "2020": {
+        "Return (%)": 14.43,
+        "Sharpe": 0.921,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1144273.0
+      },
+      "2021": {
+        "Return (%)": 4.39,
+        "Sharpe": 0.589,
+        "Trades": 2,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1043909.0
+      },
+      "2022": {
+        "Return (%)": -3.22,
+        "Sharpe": -0.318,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 967769.0
+      },
+      "2023": {
+        "Return (%)": 4.19,
+        "Sharpe": 0.506,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1041947.0
+      },
+      "2024": {
+        "Return (%)": -0.91,
+        "Sharpe": -0.128,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 990887.0
+      },
+      "2025": {
+        "Return (%)": 5.23,
+        "Sharpe": 0.351,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1052259.0
+      }
+    },
+    "MACD趨勢": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.048,
+        "Trades": 8,
+        "Win Rate (%)": 62.5,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.091,
+        "Trades": 10,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      },
+      "2021": {
+        "Return (%)": 1.43,
+        "Sharpe": 0.19,
+        "Trades": 7,
+        "Win Rate (%)": 57.1,
+        "Final Value": 1014319.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.087,
+        "Trades": 8,
+        "Win Rate (%)": 25.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 0.22,
+        "Sharpe": 0.087,
+        "Trades": 11,
+        "Win Rate (%)": 27.3,
+        "Final Value": 1002197.0
+      },
+      "2024": {
+        "Return (%)": -0.8,
+        "Sharpe": 0.038,
+        "Trades": 10,
+        "Win Rate (%)": 50.0,
+        "Final Value": 992031.0
+      },
+      "2025": {
+        "Return (%)": 2.31,
+        "Sharpe": 0.225,
+        "Trades": 13,
+        "Win Rate (%)": 38.5,
+        "Final Value": 1023070.0
+      }
+    },
+    "RSI反轉": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.031,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.079,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2021": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.078,
+        "Trades": 3,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.083,
+        "Trades": 2,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.039,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.075,
+        "Trades": 3,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.112,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      }
+    },
+    "動量策略": {
+      "2019": {
+        "Return (%)": 11.53,
+        "Sharpe": 1.146,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1115294.0
+      },
+      "2020": {
+        "Return (%)": 14.43,
+        "Sharpe": 0.765,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1144273.0
+      },
+      "2021": {
+        "Return (%)": 6.74,
+        "Sharpe": 0.501,
+        "Trades": 3,
+        "Win Rate (%)": 66.7,
+        "Final Value": 1067412.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.07,
+        "Trades": 4,
+        "Win Rate (%)": 25.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 4.68,
+        "Sharpe": 0.473,
+        "Trades": 3,
+        "Win Rate (%)": 66.7,
+        "Final Value": 1046824.0
+      },
+      "2024": {
+        "Return (%)": -0.8,
+        "Sharpe": 0.045,
+        "Trades": 4,
+        "Win Rate (%)": 50.0,
+        "Final Value": 992031.0
+      },
+      "2025": {
+        "Return (%)": 5.23,
+        "Sharpe": 0.352,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1052259.0
+      }
+    },
+    "BB突破": {
+      "2019": {
+        "Return (%)": 12.99,
+        "Sharpe": 2.055,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1129882.0
+      },
+      "2020": {
+        "Return (%)": 12.23,
+        "Sharpe": 0.789,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1122267.0
+      },
+      "2021": {
+        "Return (%)": 0.12,
+        "Sharpe": 0.092,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1001211.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.071,
+        "Trades": 4,
+        "Win Rate (%)": 25.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 4.68,
+        "Sharpe": 0.522,
+        "Trades": 3,
+        "Win Rate (%)": 33.3,
+        "Final Value": 1046824.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.062,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.53,
+        "Sharpe": 0.159,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1005300.0
+      }
+    },
+    "SuperTrend": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2021": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.0,
+        "Trades": 0,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      }
+    },
+    "Stochastic": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.04,
+        "Trades": 47,
+        "Win Rate (%)": 48.9,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.31,
+        "Sharpe": 0.11,
+        "Trades": 47,
+        "Win Rate (%)": 51.1,
+        "Final Value": 1003052.0
+      },
+      "2021": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.065,
+        "Trades": 49,
+        "Win Rate (%)": 53.1,
+        "Final Value": 1000000.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.071,
+        "Trades": 48,
+        "Win Rate (%)": 45.8,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.066,
+        "Trades": 40,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.089,
+        "Trades": 49,
+        "Win Rate (%)": 44.9,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.075,
+        "Trades": 50,
+        "Win Rate (%)": 44.0,
+        "Final Value": 1000000.0
+      }
+    },
+    "高低突破": {
+      "2019": {
+        "Return (%)": 12.57,
+        "Sharpe": 1.197,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1125719.0
+      },
+      "2020": {
+        "Return (%)": 12.23,
+        "Sharpe": 0.663,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1122267.0
+      },
+      "2021": {
+        "Return (%)": 5.33,
+        "Sharpe": 0.44,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1053301.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.063,
+        "Trades": 4,
+        "Win Rate (%)": 25.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 6.48,
+        "Sharpe": 0.674,
+        "Trades": 4,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1064820.0
+      },
+      "2024": {
+        "Return (%)": 1.2,
+        "Sharpe": 0.166,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1012016.0
+      },
+      "2025": {
+        "Return (%)": 2.33,
+        "Sharpe": 0.246,
+        "Trades": 3,
+        "Win Rate (%)": 33.3,
+        "Final Value": 1023312.0
+      }
+    },
+    "多指標": {
+      "2019": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.034,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2020": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.092,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      },
+      "2021": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.037,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2022": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.09,
+        "Trades": 2,
+        "Win Rate (%)": 50.0,
+        "Final Value": 1000000.0
+      },
+      "2023": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.043,
+        "Trades": 2,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2024": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.052,
+        "Trades": 1,
+        "Win Rate (%)": 100.0,
+        "Final Value": 1000000.0
+      },
+      "2025": {
+        "Return (%)": 0.0,
+        "Sharpe": 0.096,
+        "Trades": 1,
+        "Win Rate (%)": 0.0,
+        "Final Value": 1000000.0
+      }
+    }
+  }
+}

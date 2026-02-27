@@ -1,0 +1,38 @@
+{
+  "Mean Reversion": {
+    "Total Return (%)": 0.0,
+    "Annual Return (%)": 0.0,
+    "Sharpe Ratio": 0.02,
+    "Max Drawdown (%)": -7.85,
+    "Win Rate (%)": 0.0,
+    "Profit Factor": 0.0,
+    "Total Trades": 2,
+    "Winning": 0,
+    "Losing": 1,
+    "Final Value": 1000000.0
+  },
+  "Trend Following": {
+    "Total Return (%)": 0.0,
+    "Annual Return (%)": 0.0,
+    "Sharpe Ratio": 0.19,
+    "Max Drawdown (%)": -44.9,
+    "Win Rate (%)": 25.0,
+    "Profit Factor": 24.94,
+    "Total Trades": 4,
+    "Winning": 1,
+    "Losing": 1,
+    "Final Value": 1000000.0
+  },
+  "Momentum": {
+    "Total Return (%)": 0.0,
+    "Annual Return (%)": 0.0,
+    "Sharpe Ratio": 0.12,
+    "Max Drawdown (%)": -26.54,
+    "Win Rate (%)": 25.0,
+    "Profit Factor": 3.42,
+    "Total Trades": 12,
+    "Winning": 3,
+    "Losing": 3,
+    "Final Value": 1000000.0
+  }
+}

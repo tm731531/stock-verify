@@ -1,0 +1,201 @@
+# TX Quantitative Trading System 配置文件
+
+# 初始設定
+trading:
+  # 初始資金 (台幣)
+  initial_capital: 1000000
+
+  # 單口面值
+  contract_size: 200  # 1 點 = 200 元
+
+  # 交易成本
+  transaction_cost: 0.0005  # 0.05%
+
+  # 手續費 (元/口)
+  commission: 50
+
+# 期貨代碼
+products:
+  TX: "台指期 (大台)"
+  MTX: "台指期微型 (小台)"
+
+# 策略配置
+strategies:
+  mean_reversion:
+    name: "均值回歸策略"
+    enabled: true
+    description: "布林帶突破 + RSI 極值交易"
+    parameters:
+      bb_period: 20        # 布林帶週期
+      bb_std: 2            # 布林帶標準差
+      rsi_period: 14       # RSI 週期
+      rsi_oversold: 30     # RSI 超賣線
+      rsi_overbought: 70   # RSI 超買線
+    risk_profile: "低風險"
+    max_drawdown: 7.85
+    sharpe_ratio: 0.02
+
+  trend_following:
+    name: "趨勢跟蹤策略"
+    enabled: true
+    description: "SMA 黃金叉/死亡叉"
+    parameters:
+      fast_sma: 20         # 快線 SMA
+      slow_sma: 50         # 慢線 SMA
+    risk_profile: "中等風險"
+    max_drawdown: 44.9
+    sharpe_ratio: 0.19
+
+  momentum:
+    name: "動量策略"
+    enabled: true
+    description: "20 日價格變化率"
+    parameters:
+      momentum_window: 20   # 動量週期
+      threshold: 0.02       # 閾值 (+/- 2%)
+    risk_profile: "中等風險"
+    max_drawdown: 26.54
+    sharpe_ratio: 0.12
+
+# 風險管理
+risk_management:
+  # 單筆交易最大風險
+  max_risk_per_trade: 0.02  # 2% 資金
+
+  # 最大同時倉位數
+  max_positions: 2
+
+  # 月度最大虧損
+  max_monthly_loss: 0.05  # 5% 資金
+
+  # 止損設置
+  stop_loss:
+    mean_reversion: 0.01   # 1%
+    trend_following: 0.02  # 2%
+    momentum: 0.015        # 1.5%
+
+  # 槓桿比例
+  max_leverage: 10  # 最高 10 倍槓桿
+
+# 交易時間
+trading_hours:
+  morning_open: "09:00"
+  morning_close: "11:30"
+  afternoon_open: "13:30"
+  afternoon_close: "15:00"
+
+  # 最佳交易時段
+  best_periods:
+    - "09:00-11:00"   # 40% 日成交量
+    - "14:30-15:00"   # 30% 日成交量
+
+# 數據設定
+data:
+  # 數據來源
+  source: "taifex"  # taifex | finmind | local
+
+  # 數據路徑
+  data_dir: "./data"
+
+  # 樣本數據檔案
+  sample_file: "TX_sample_2024_2026.csv"
+
+  # 回測結果
+  results_file: "backtest_results.json"
+
+# 回測設定
+backtest:
+  # 回測區間
+  start_date: "2024-01-01"
+  end_date: "2026-02-27"
+
+  # 初始資金
+  initial_capital: 1000000
+
+  # 交易日假設
+  trading_days_per_year: 252
+
+# 績效目標
+performance_targets:
+  annual_return:
+    conservative: "5-8%"      # 均值回歸
+    moderate: "10-15%"         # 趨勢跟蹤
+    aggressive: "15-25%"       # 組合策略
+
+  # Sharpe Ratio 目標
+  sharpe_ratio: 0.5
+
+  # 最大回撤容忍度
+  max_drawdown: 0.20  # 20%
+
+# 期貨商信息 (示例)
+brokers:
+  - name: "群益期貨"
+    code: "QF"
+    website: "https://www.quamtrade.com"
+
+  - name: "統一期貨"
+    code: "UF"
+    website: "https://www.unifutures.com.tw"
+
+  - name: "永豐期貨"
+    code: "YF"
+    website: "https://www.yuanta.com.tw"
+
+# 通知設定
+notifications:
+  # 是否啟用通知
+  enabled: true
+
+  # 通知方式
+  methods:
+    - "console"      # 控制台輸出
+    - "email"        # 電子郵件 (可選)
+    - "sms"          # 簡訊 (可選)
+
+  # 通知事件
+  events:
+    - "trade_entry"     # 進場
+    - "trade_exit"      # 出場
+    - "stop_loss"       # 觸發止損
+    - "max_drawdown"    # 達到最大回撤
+
+# 日誌設定
+logging:
+  # 日誌級別: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+
+  # 日誌文件
+  file: "./logs/trading.log"
+
+  # 日誌保留天數
+  retention_days: 30
+
+# 高級設定
+advanced:
+  # 參數優化
+  optimization:
+    enabled: false
+    method: "grid_search"  # grid_search | random_search
+    num_trials: 100
+
+  # 機器學習預測
+  ml_prediction:
+    enabled: false
+    model: "LSTM"
+    lookback_period: 60
+
+  # 自動化交易
+  automation:
+    enabled: false
+    mode: "paper_trading"  # paper_trading | live_trading
+
+  # 實時監控
+  monitoring:
+    enabled: true
+    refresh_interval: 60  # 秒
+
+# 版本信息
+version: "1.0"
+last_updated: "2026-02-27"
+author: "TX Quantitative Team"
