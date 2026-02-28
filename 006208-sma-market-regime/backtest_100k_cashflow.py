@@ -324,7 +324,7 @@ def print_report(results: dict):
 
 # 執行回測
 if __name__ == '__main__':
-    csv_path = '006208-sma-market-regime/data/006208_historical.csv'
+    csv_path = 'data/006208_historical.csv'
 
     results = backtest_100k_strategy(csv_path)
     print_report(results)
