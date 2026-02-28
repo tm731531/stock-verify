@@ -229,8 +229,8 @@ class SMA006208Bot:
 
         logger.info(f"市場訊號: {market_status['regime'].upper()}")
         logger.info(f"  價格: ${market_status['close']:.2f}")
-        logger.info(f"  SMA50: ${market_status['sma50']:.2f}")
-        logger.info(f"  SMA200: ${market_status['sma200']:.2f}")
+        logger.info(f"  SMA20 (短線): ${market_status['sma50']:.2f}")
+        logger.info(f"  SMA50 (長線): ${market_status['sma200']:.2f}")
         logger.info(f"  波動率: {market_status['volatility_ratio']:.2f}x")
 
         # 記錄訊號

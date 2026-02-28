@@ -25,9 +25,9 @@ class SMAMarketRegime:
         """計算技術指標"""
         df = df.copy()
 
-        # SMA
-        df['SMA_50'] = df['Close'].rolling(window=self.sma_short).mean()
-        df['SMA_200'] = df['Close'].rolling(window=self.sma_long).mean()
+        # SMA (動態列名)
+        df[f'SMA_{self.sma_short}'] = df['Close'].rolling(window=self.sma_short).mean()
+        df[f'SMA_{self.sma_long}'] = df['Close'].rolling(window=self.sma_long).mean()
 
         # ATR (平均真實範圍)
         df['TR'] = np.maximum(
@@ -47,6 +47,9 @@ class SMAMarketRegime:
 
     def detect_regime(self, last_row: pd.Series, prev_row: Optional[pd.Series] = None) -> Dict[str, Any]:
         """檢測市場制度和訊號"""
+        sma_short_col = f'SMA_{self.sma_short}'
+        sma_long_col = f'SMA_{self.sma_long}'
+
         result = {
             "regime": "unknown",  # bull, bear, transition
             "signal": None,  # warning, entry, hold
@@ -54,8 +57,8 @@ class SMAMarketRegime:
             "reason": "",
             "indicators": {
                 "close": float(last_row.get('Close', 0)),
-                "sma50": float(last_row.get('SMA_50', 0)),
-                "sma200": float(last_row.get('SMA_200', 0)),
+                "sma_short": float(last_row.get(sma_short_col, 0)),
+                "sma_long": float(last_row.get(sma_long_col, 0)),
                 "atr": float(last_row.get('ATR', 0)),
                 "atr_ma": float(last_row.get('ATR_MA', 0)),
                 "daily_return": float(last_row.get('Daily_Return', 0))
@@ -63,11 +66,11 @@ class SMAMarketRegime:
         }
 
         # 檢查資料完整性
-        if pd.isna(last_row.get('SMA_50')) or pd.isna(last_row.get('SMA_200')):
+        if pd.isna(last_row.get(sma_short_col)) or pd.isna(last_row.get(sma_long_col)):
             return result
 
-        sma50 = last_row['SMA_50']
-        sma200 = last_row['SMA_200']
+        sma_short = last_row[sma_short_col]
+        sma_long = last_row[sma_long_col]
         atr = last_row.get('ATR', 0)
         atr_ma = last_row.get('ATR_MA', 0)
         daily_ret = last_row.get('Daily_Return', 0)
@@ -80,16 +83,16 @@ class SMAMarketRegime:
                 result["reason"] = f"波動爆炸(ATR {atr/atr_ma:.1f}x) + 跌幅{daily_ret*100:.1f}%"
 
         # ===== 規則 2: 趨勢確認 =====
-        if sma50 < sma200:
+        if sma_short < sma_long:
             result["regime"] = "bear"
             if not result["signal"]:
                 result["signal"] = "hold"
-                result["reason"] = "空頭進行中: SMA50 < SMA200"
+                result["reason"] = f"空頭進行中: SMA{self.sma_short} < SMA{self.sma_long}"
         else:
             result["regime"] = "bull"
 
         # ===== 規則 3: 進場機會 (空頭結束) =====
-        if sma50 > sma200 and pd.notna(atr) and pd.notna(atr_ma) and atr_ma > 0:
+        if sma_short > sma_long and pd.notna(atr) and pd.notna(atr_ma) and atr_ma > 0:
             if atr <= atr_ma * self.config.get('entry_volatility_threshold', 1.3):
                 if not result["signal"] or result["signal"] == "hold":
                     result["signal"] = "entry"
@@ -108,12 +111,17 @@ class SMAMarketRegime:
 
         regime_info = self.detect_regime(last_row)
 
+        sma_short_col = f'SMA_{self.sma_short}'
+        sma_long_col = f'SMA_{self.sma_long}'
+
         return {
             "status": "ok",
             "date": str(last_row.get('Date', '')),
             "close": float(last_row['Close']),
-            "sma50": float(last_row['SMA_50']),
-            "sma200": float(last_row['SMA_200']),
+            "sma_short": float(last_row[sma_short_col]),
+            "sma_long": float(last_row[sma_long_col]),
+            "sma50": float(last_row[sma_short_col]),  # 保持向後相容
+            "sma200": float(last_row[sma_long_col]),  # 保持向後相容
             "atr": float(last_row['ATR']),
             "atr_ma": float(last_row['ATR_MA']),
             "regime": regime_info["regime"],

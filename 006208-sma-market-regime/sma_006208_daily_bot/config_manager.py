@@ -63,11 +63,11 @@ class ConfigManager:
         default = {
             "enabled": True,
             "strategy_name": "sma_market_regime",
-            "description": "SMA 市場制度檢測 (50日 vs 200日)",
+            "description": "SMA 市場制度檢測 (20日 vs 50日)",
 
             # SMA 參數
-            "sma_short": 50,
-            "sma_long": 200,
+            "sma_short": 20,
+            "sma_long": 50,
 
             # ATR 波動率參數
             "atr_period": 14,
