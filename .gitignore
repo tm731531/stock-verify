@@ -44,7 +44,6 @@ htmlcov/
 # Temporary files
 *.tmp
 *.log
-test_*
 temp/
 
 # Data files (optional - keep only source data)
