@@ -37,7 +37,7 @@ class TestTDCCCrawler:
 
         stats = crawler.crawl(stocks=["2330"])
 
-        crawler.scraper.query_stock.assert_called_once_with("2330")
+        crawler.scraper.query_stock.assert_called_once_with("2330", dates=["20260226"])
         assert stats["total_stocks"] == 1
         assert stats["success"] == 1
         assert stats["failed"] == 0
