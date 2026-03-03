@@ -3,5 +3,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
-data/
+data/*
+!data/analysis_report.txt
+!data/analysis_report_v2.txt
+!data/top_gainers.csv
 .env

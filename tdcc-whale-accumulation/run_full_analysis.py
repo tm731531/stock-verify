@@ -95,9 +95,8 @@ def phase2_analyze():
 
         stocks_with_acc += 1
 
-        # 有吃貨樣態才查股價（從快取取，不再呼叫 API）
-        stock_dates = [r["date"] for r in records]
-        price_df = fetcher.fetch_stock_prices(code, stock_dates)
+        # 有吃貨樣態才查股價（用所有營業日，從快取取）
+        price_df = fetcher.fetch_stock_prices(code, all_bdays)
         result = detector.analyze_stock(code, tdcc_df, price_df)
         all_results.append(result)
 

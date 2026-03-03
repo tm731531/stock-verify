@@ -9,8 +9,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-TWSE_DAY_ALL_URL = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL"
-TPEX_QUOTES_URL = "https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php"
+# 歷史日期用：MI_INDEX 回傳指定日期的全市場收盤行情
+TWSE_MI_INDEX_URL = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
+# TPEX 歷史日期用：otc_quotes_no1430 回傳指定日期的上櫃收盤行情
+TPEX_HIST_URL = "https://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_result.php"
 REQUEST_TIMEOUT = 15
 
 
@@ -45,32 +47,51 @@ class PriceFetcher:
 
         prices = {}
         prices.update(self._fetch_twse_day(date))
+        time.sleep(self.request_delay)
         prices.update(self._fetch_tpex_day(date))
         self._cache[date] = prices
         return prices
 
     def _fetch_twse_day(self, date: str) -> Dict[str, float]:
-        """Fetch all listed (上市) stocks' close prices for a date."""
+        """Fetch all listed (上市) stocks' close prices for a historical date.
+
+        Uses MI_INDEX endpoint which returns correct historical data
+        (unlike STOCK_DAY_ALL which only returns the latest day).
+        """
         try:
             resp = self.session.get(
-                TWSE_DAY_ALL_URL,
-                params={"response": "json", "date": date},
+                TWSE_MI_INDEX_URL,
+                params={"response": "json", "date": date, "type": "ALLBUT0999"},
                 timeout=REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
             data = resp.json()
 
-            if data.get("stat") != "OK" or "data" not in data:
+            if data.get("stat") != "OK":
                 return {}
 
+            # 驗證回傳的日期與請求一致
+            resp_date = data.get("date", "")
+            if resp_date and resp_date != date:
+                logger.warning(f"TWSE date mismatch: requested {date}, got {resp_date}")
+                return {}
+
+            # Table 8 = 每日收盤行情 (全部)
+            # fields: 證券代號, 證券名稱, 成交股數, 成交筆數, 成交金額,
+            #         開盤價, 最高價, 最低價, 收盤價(idx 8), ...
+            tables = data.get("tables", [])
             prices = {}
-            for row in data["data"]:
-                code = row[0].strip()
-                close_str = row[7].replace(",", "").strip()
-                try:
-                    prices[code] = float(close_str)
-                except (ValueError, IndexError):
-                    continue
+            for table in tables:
+                rows = table.get("data", [])
+                if len(rows) > 500:  # 個股表才會超過 500 筆
+                    for row in rows:
+                        code = row[0].strip()
+                        try:
+                            close_str = row[8].replace(",", "").strip()
+                            prices[code] = float(close_str)
+                        except (ValueError, IndexError):
+                            continue
+                    break
             return prices
 
         except Exception as e:
@@ -78,17 +99,28 @@ class PriceFetcher:
             return {}
 
     def _fetch_tpex_day(self, date: str) -> Dict[str, float]:
-        """Fetch all OTC (上櫃) stocks' close prices for a date."""
+        """Fetch all OTC (上櫃) stocks' close prices for a historical date.
+
+        Uses otc_quotes_no1430 endpoint which returns correct historical data
+        (unlike daily_close_quotes which only returns the latest day).
+        """
         try:
             roc_date = _to_roc_date(date)
             resp = self.session.get(
-                TPEX_QUOTES_URL,
-                params={"l": "zh-tw", "d": roc_date, "o": "json"},
+                TPEX_HIST_URL,
+                params={"l": "zh-tw", "d": roc_date, "se": "EW", "o": "json"},
                 timeout=REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
             data = resp.json()
 
+            # 驗證日期
+            resp_date = data.get("date", "")
+            if resp_date and resp_date != date:
+                logger.warning(f"TPEX date mismatch: requested {date}, got {resp_date}")
+                return {}
+
+            # fields: 代號, 名稱, 收盤(idx 2), 漲跌, 開盤, 最高, 最低, ...
             prices = {}
             for table in data.get("tables", []):
                 for row in table.get("data", []):
