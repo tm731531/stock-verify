@@ -108,6 +108,19 @@ class TestFetchStockPrices:
         assert len(df) == 0
 
 
+class TestGenerateBusinessDays:
+    def test_weekdays_only(self):
+        days = PriceFetcher.generate_business_days("20260223", "20260227")
+        assert days == ["20260223", "20260224", "20260225", "20260226", "20260227"]
+
+    def test_skips_weekend(self):
+        # 2026-02-28 is Saturday, 2026-03-01 is Sunday
+        days = PriceFetcher.generate_business_days("20260227", "20260302")
+        assert "20260228" not in days
+        assert "20260301" not in days
+        assert days == ["20260227", "20260302"]
+
+
 class TestFetchAllDates:
     def test_prefetches_all_dates(self):
         fetcher = PriceFetcher(request_delay=0)

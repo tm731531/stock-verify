@@ -137,6 +137,7 @@ class PriceFetcher:
         """
         Pre-fetch and cache market data for multiple dates.
         Call this once before fetch_stock_prices to avoid repeated API calls.
+        Skips dates that return no data (holidays / weekends).
         """
         for i, date in enumerate(dates):
             if date not in self._cache:
@@ -144,6 +145,14 @@ class PriceFetcher:
                 self.fetch_market_day(date)
                 if self.request_delay > 0:
                     time.sleep(self.request_delay)
+
+    @staticmethod
+    def generate_business_days(start: str, end: str) -> List[str]:
+        """
+        Generate all weekday dates (YYYYMMDD) between start and end inclusive.
+        """
+        dates = pd.bdate_range(start=start, end=end)
+        return [d.strftime("%Y%m%d") for d in dates]
 
     def merge_with_tdcc(
         self, price_df: pd.DataFrame, tdcc_records: List[Dict]
