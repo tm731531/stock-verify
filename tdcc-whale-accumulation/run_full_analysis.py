@@ -57,7 +57,21 @@ def phase2_analyze():
     logger.info(f"共 {len(stocks)} 檔股票有 TDCC 數據")
 
     detector = PatternDetector(min_accumulation_weeks=3, min_surge_pct=10.0)
-    fetcher = PriceFetcher()
+    fetcher = PriceFetcher(request_delay=0.5)
+
+    # 先收集所有需要的日期，一次批量拉取全市場收盤價
+    all_dates = set()
+    for code in stocks:
+        records = dm.query(stock_code=code)
+        for r in records:
+            all_dates.add(r["date"])
+    all_dates = sorted(all_dates)
+    logger.info(f"需要 {len(all_dates)} 個交易日的全市場收盤價")
+
+    # 批量預取（每個日期 2 次 API 呼叫：TWSE + TPEX）
+    fetcher.fetch_all_dates(all_dates)
+    logger.info(f"收盤價預取完成，快取中共 {sum(len(v) for v in fetcher._cache.values())} 筆價格")
+
     all_results = []
     stocks_with_acc = 0
 
@@ -75,12 +89,13 @@ def phase2_analyze():
 
         stocks_with_acc += 1
 
-        # 有吃貨樣態才拉股價（節省 API 額度）
-        price_df = fetcher.fetch(code, start="2025-03-01", end="2026-03-03")
+        # 有吃貨樣態才查股價（從快取取，不再呼叫 API）
+        stock_dates = [r["date"] for r in records]
+        price_df = fetcher.fetch_stock_prices(code, stock_dates)
         result = detector.analyze_stock(code, tdcc_df, price_df)
         all_results.append(result)
 
-        if i % 100 == 0:
+        if i % 200 == 0:
             logger.info(f"分析進度: {i}/{len(stocks)}，已找到 {stocks_with_acc} 檔有吃貨樣態")
 
     logger.info(f"Phase 2 完成: {len(stocks)} 檔分析，{stocks_with_acc} 檔有吃貨樣態")
