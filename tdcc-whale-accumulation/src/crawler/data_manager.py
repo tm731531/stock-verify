@@ -36,14 +36,19 @@ class DataManager:
         self._init_db()
 
     def _init_db(self) -> None:
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
+        conn.execute("PRAGMA journal_mode=WAL")
         conn.execute(CREATE_TABLE_SQL)
         conn.commit()
         conn.close()
 
-    def save_records(self, records: List[Dict]) -> int:
+    def save_records(self, records: List[Dict], skip_csv: bool = False) -> int:
         """
-        Save records to both CSV and SQLite, deduplicating by (stock_code, date).
+        Save records to SQLite (and optionally CSV), deduplicating by (stock_code, date).
+
+        Args:
+            records: List of record dicts.
+            skip_csv: If True, skip CSV writing (for parallel safety).
 
         Returns number of new records saved.
         """
@@ -52,8 +57,8 @@ class DataManager:
 
         new_df = pd.DataFrame(records)[RECORD_COLUMNS]
 
-        # --- SQLite (upsert) ---
-        conn = sqlite3.connect(self.db_path)
+        # --- SQLite (upsert with WAL + busy timeout) ---
+        conn = sqlite3.connect(self.db_path, timeout=30)
         new_count = 0
         for _, row in new_df.iterrows():
             try:
@@ -68,18 +73,18 @@ class DataManager:
         conn.commit()
         conn.close()
 
-        # --- CSV (read-merge-write) ---
-        if os.path.exists(self.csv_path):
-            existing_df = pd.read_csv(self.csv_path, dtype={"stock_code": str, "date": str})
-            merged = pd.concat([existing_df, new_df], ignore_index=True)
-            merged = merged.drop_duplicates(subset=["stock_code", "date"], keep="last")
-        else:
-            merged = new_df
+        # --- CSV (skip in parallel mode to avoid corruption) ---
+        if not skip_csv:
+            if os.path.exists(self.csv_path):
+                existing_df = pd.read_csv(self.csv_path, dtype={"stock_code": str, "date": str})
+                merged = pd.concat([existing_df, new_df], ignore_index=True)
+                merged = merged.drop_duplicates(subset=["stock_code", "date"], keep="last")
+            else:
+                merged = new_df
 
-        merged = merged.sort_values(["stock_code", "date"]).reset_index(drop=True)
-        merged.to_csv(self.csv_path, index=False)
+            merged = merged.sort_values(["stock_code", "date"]).reset_index(drop=True)
+            merged.to_csv(self.csv_path, index=False)
 
-        saved = len(merged) - (len(pd.read_csv(self.csv_path)) if os.path.exists(self.csv_path) else 0)
         logger.info(f"Saved {len(new_df)} records ({new_count} new)")
         return new_count
 
@@ -128,3 +133,22 @@ class DataManager:
         ).fetchone()
         conn.close()
         return row[0] if row and row[0] else None
+
+    def get_existing_dates(self, stock_code: str) -> List[str]:
+        """Get all dates already stored for a given stock."""
+        conn = sqlite3.connect(self.db_path)
+        rows = conn.execute(
+            "SELECT DISTINCT date FROM holdings WHERE stock_code = ? ORDER BY date",
+            (stock_code,),
+        ).fetchall()
+        conn.close()
+        return [r[0] for r in rows]
+
+    def get_stock_date_counts(self) -> Dict[str, int]:
+        """Get date count per stock for completeness checking."""
+        conn = sqlite3.connect(self.db_path)
+        rows = conn.execute(
+            "SELECT stock_code, COUNT(DISTINCT date) as cnt FROM holdings GROUP BY stock_code"
+        ).fetchall()
+        conn.close()
+        return {r[0]: r[1] for r in rows}

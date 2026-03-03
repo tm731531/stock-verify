@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-MAX_DATES = 12  # 最近 12 週（3 個月）
+MAX_DATES = 51  # 最近 51 週（約一年，TDCC 最大可查範圍）
 
 
 def phase1_crawl():

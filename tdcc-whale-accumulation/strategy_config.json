@@ -1,0 +1,44 @@
+{
+  "strategy_name": "盤整吃貨 v4",
+  "version": "2026-03-03",
+  "status": "待 51 週數據驗證",
+
+  "entry_conditions": {
+    "min_consecutive_weeks": 3,
+    "min_ratio_change_pct": 1.0,
+    "max_price_change_during_acc_pct": 1.0,
+    "min_stock_price": 15,
+    "max_stock_price": 50,
+    "exclude_etf": true,
+    "etf_pattern": "^00"
+  },
+
+  "exit_conditions": {
+    "hold_trading_days": 60,
+    "stop_loss_pct": -5.0
+  },
+
+  "position_sizing": {
+    "total_capital": 500000,
+    "max_positions": 5,
+    "per_position": 100000
+  },
+
+  "transaction_costs": {
+    "buy_commission_pct": 0.1425,
+    "sell_commission_pct": 0.1425,
+    "sell_tax_pct": 0.3,
+    "round_trip_pct": 0.585
+  },
+
+  "backtest_results_12w": {
+    "events": 12,
+    "success_rate_pct": 58.3,
+    "avg_return_per_trade_pct": 18.32,
+    "portfolio_avg_return_twd": 90370,
+    "portfolio_loss_probability_pct": 1.2,
+    "portfolio_loss_gt_10000_pct": 0.0,
+    "worst_case_twd": -9929,
+    "note": "基於 12 週數據，樣本偏小，待驗證"
+  }
+}
