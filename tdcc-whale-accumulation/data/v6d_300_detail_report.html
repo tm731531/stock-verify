@@ -1,0 +1,143 @@
+<!DOCTYPE html><html lang="zh-TW"><head><meta charset="utf-8">
+<title>v6d 策略交易紀錄 — 股價≥300</title>
+<style>
+body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; background: #f8f9fa; color: #333; }
+h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 10px; }
+h2 { color: #2c3e50; margin-top: 40px; border-left: 4px solid #3498db; padding-left: 12px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+th { background: #2c3e50; color: white; padding: 10px 12px; text-align: center; font-size: 14px; }
+td { padding: 8px 12px; border-bottom: 1px solid #e9ecef; text-align: center; font-size: 14px; }
+tr:hover { background: #f1f3f5; }
+.green { color: #27ae60; font-weight: bold; }
+.red { color: #e74c3c; font-weight: bold; }
+.gray { color: #7f8c8d; }
+.box { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.kpi { display: inline-block; text-align: center; margin: 0 24px 12px 0; }
+.kpi-val { font-size: 28px; font-weight: bold; }
+.kpi-label { font-size: 13px; color: #7f8c8d; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.tag-buy { background: #ebf5fb; color: #2980b9; }
+.tag-sl { background: #fdedec; color: #e74c3c; }
+.tag-tp { background: #eafaf1; color: #27ae60; }
+.tag-open { background: #fef9e7; color: #f39c12; }
+.rule-box { background: #eaf2f8; border-left: 4px solid #2980b9; padding: 16px; margin: 16px 0; font-size: 14px; }
+</style></head><body>
+<h1>v6d 大戶吃貨策略 — 完整交易紀錄</h1>
+<div class="rule-box">
+<strong>進場:</strong> ≥2週連升 | ratio↑≥2% | sync≥50% | 散戶↓≥2% | 股價≥300 | 排除ETF/特殊事件<br>
+<strong>出場:</strong> -7% 停損 | 10% trailing stop<br>
+<strong>資金:</strong> 500,000 TWD | 每檔 125,000 | 每週最多 2 檔 | 交易成本 0.585%
+</div>
+<div class="box">
+<div class="kpi"><div class="kpi-val green">+31.9%</div><div class="kpi-label">總報酬</div></div>
+<div class="kpi"><div class="kpi-val">659,657</div><div class="kpi-label">終值</div></div>
+<div class="kpi"><div class="kpi-val red">-20.2%</div><div class="kpi-label">最大回撤</div></div>
+<div class="kpi"><div class="kpi-val">7/18</div><div class="kpi-label">勝率 39%</div></div>
+<div class="kpi"><div class="kpi-val">4.4x</div><div class="kpi-label">盈虧比</div></div>
+<div class="kpi"><div class="kpi-val green">+262,629</div><div class="kpi-label">獲利</div></div>
+<div class="kpi"><div class="kpi-val red">-102,618</div><div class="kpi-label">虧損</div></div>
+</div>
+<h2>月度淨值走勢</h2>
+<table><thead><tr><th>月份</th><th>月初</th><th>月底</th><th>月報酬</th><th>累計</th><th>持倉</th></tr></thead><tbody>
+<tr><td>2025/05</td><td>500,000</td><td>545,913</td><td class="green">+9.2%</td><td class="green">+9.2%</td><td>2檔</td></tr>
+<tr><td>2025/06</td><td>531,523</td><td>584,478</td><td class="green">+10.0%</td><td class="green">+16.9%</td><td>4檔</td></tr>
+<tr><td>2025/07</td><td>584,182</td><td>639,275</td><td class="green">+9.4%</td><td class="green">+27.9%</td><td>4檔</td></tr>
+<tr><td>2025/08</td><td>637,657</td><td>740,441</td><td class="green">+16.1%</td><td class="green">+48.1%</td><td>4檔</td></tr>
+<tr><td>2025/09</td><td>755,106</td><td>763,002</td><td class="green">+1.0%</td><td class="green">+52.6%</td><td>5檔</td></tr>
+<tr><td>2025/10</td><td>756,382</td><td>714,319</td><td class="red">-5.6%</td><td class="green">+42.9%</td><td>4檔</td></tr>
+<tr><td>2025/11</td><td>713,964</td><td>719,551</td><td class="green">+0.8%</td><td class="green">+43.9%</td><td>2檔</td></tr>
+<tr><td>2025/12</td><td>711,170</td><td>732,024</td><td class="green">+2.9%</td><td class="green">+46.4%</td><td>3檔</td></tr>
+<tr><td>2026/01</td><td>728,592</td><td>778,376</td><td class="green">+6.8%</td><td class="green">+55.7%</td><td>4檔</td></tr>
+<tr><td>2026/02</td><td>779,397</td><td>792,394</td><td class="green">+1.7%</td><td class="green">+58.5%</td><td>4檔</td></tr>
+<tr><td>2026/03</td><td>659,657</td><td>659,657</td><td class="">+0.0%</td><td class="green">+31.9%</td><td>2檔</td></tr>
+</tbody></table>
+<h2>進場紀錄</h2>
+<table><thead><tr><th>#</th><th>日期</th><th>股票</th><th>買入價</th><th>股數</th><th>金額</th><th>連升</th><th>ratio↑</th><th>sync</th><th>散戶</th></tr></thead><tbody>
+<tr><td>1</td><td>2025/05/05</td><td><strong>6223</strong></td><td>658.0</td><td>189</td><td>124,362</td><td>3週</td><td>+2.2%</td><td>74%</td><td>-2.4%</td></tr>
+<tr><td>2</td><td>2025/05/19</td><td><strong>6510</strong></td><td>765.0</td><td>163</td><td>124,695</td><td>3週</td><td>+6.0%</td><td>58%</td><td>-14.2%</td></tr>
+<tr><td>3</td><td>2025/06/02</td><td><strong>4728</strong></td><td>398.0</td><td>314</td><td>124,972</td><td>6週</td><td>+2.9%</td><td>101%</td><td>-6.2%</td></tr>
+<tr><td>4</td><td>2025/06/02</td><td><strong>3017</strong></td><td>629.0</td><td>198</td><td>124,542</td><td>4週</td><td>+2.7%</td><td>110%</td><td>-12.3%</td></tr>
+<tr><td>5</td><td>2025/07/14</td><td><strong>5536</strong></td><td>504.0</td><td>248</td><td>124,992</td><td>3週</td><td>+2.4%</td><td>110%</td><td>-3.6%</td></tr>
+<tr><td>6</td><td>2025/07/28</td><td><strong>1519</strong></td><td>640.0</td><td>195</td><td>124,800</td><td>4週</td><td>+3.9%</td><td>89%</td><td>-15.5%</td></tr>
+<tr><td>7</td><td>2025/08/25</td><td><strong>3008</strong></td><td>2,370.0</td><td>52</td><td>123,240</td><td>5週</td><td>+2.3%</td><td>51%</td><td>-2.0%</td></tr>
+<tr><td>8</td><td>2025/08/25</td><td><strong>3406</strong></td><td>448.0</td><td>279</td><td>124,992</td><td>5週</td><td>+3.9%</td><td>92%</td><td>-4.5%</td></tr>
+<tr><td>9</td><td>2025/09/01</td><td><strong>3533</strong></td><td>1,420.0</td><td>88</td><td>124,960</td><td>2週</td><td>+2.3%</td><td>97%</td><td>-8.2%</td></tr>
+<tr><td>10</td><td>2025/09/08</td><td><strong>6510</strong></td><td>1,445.0</td><td>86</td><td>124,270</td><td>3週</td><td>+3.9%</td><td>152%</td><td>-6.0%</td></tr>
+<tr><td>11</td><td>2025/10/07</td><td><strong>2382</strong></td><td>308.5</td><td>405</td><td>124,942</td><td>4週</td><td>+2.3%</td><td>86%</td><td>-9.0%</td></tr>
+<tr><td>12</td><td>2025/10/07</td><td><strong>3413</strong></td><td>337.5</td><td>370</td><td>124,875</td><td>5週</td><td>+2.4%</td><td>67%</td><td>-2.4%</td></tr>
+<tr><td>13</td><td>2025/11/03</td><td><strong>6274</strong></td><td>388.5</td><td>321</td><td>124,708</td><td>2週</td><td>+4.2%</td><td>105%</td><td>-8.7%</td></tr>
+<tr><td>14</td><td>2025/11/03</td><td><strong>2357</strong></td><td>691.0</td><td>180</td><td>124,380</td><td>9週</td><td>+2.1%</td><td>55%</td><td>-6.1%</td></tr>
+<tr><td>15</td><td>2025/12/01</td><td><strong>1795</strong></td><td>315.5</td><td>396</td><td>124,938</td><td>3週</td><td>+3.0%</td><td>77%</td><td>-11.6%</td></tr>
+<tr><td>16</td><td>2025/12/01</td><td><strong>6223</strong></td><td>2,155.0</td><td>58</td><td>124,990</td><td>2週</td><td>+2.5%</td><td>105%</td><td>-8.6%</td></tr>
+<tr><td>17</td><td>2026/01/05</td><td><strong>6510</strong></td><td>2,250.0</td><td>55</td><td>123,750</td><td>5週</td><td>+5.4%</td><td>93%</td><td>-14.7%</td></tr>
+<tr><td>18</td><td>2026/01/05</td><td><strong>3008</strong></td><td>2,535.0</td><td>49</td><td>124,215</td><td>6週</td><td>+2.9%</td><td>105%</td><td>-6.1%</td></tr>
+<tr><td>19</td><td>2026/02/02</td><td><strong>6446</strong></td><td>763.0</td><td>163</td><td>124,369</td><td>4週</td><td>+2.8%</td><td>52%</td><td>-14.0%</td></tr>
+<tr><td>20</td><td>2026/02/02</td><td><strong>1795</strong></td><td>354.5</td><td>352</td><td>124,784</td><td>3週</td><td>+5.9%</td><td>112%</td><td>-13.4%</td></tr>
+</tbody></table>
+<h2>出場紀錄</h2>
+<table><thead><tr><th>日期</th><th>股票</th><th>賣出價</th><th>出場</th><th>持有</th><th>報酬</th><th>損益</th></tr></thead><tbody>
+<tr><td>2025/06/23</td><td><strong>6510</strong></td><td>820.0</td><td><span class="tag tag-tp">停利</span></td><td>24天</td><td class="green">+7.2%</td><td class="green">+8,196</td></tr>
+<tr><td>2025/07/25</td><td><strong>6223</strong></td><td>1,010.0</td><td><span class="tag tag-tp">停利</span></td><td>58天</td><td class="green">+53.5%</td><td class="green">+65,506</td></tr>
+<tr><td>2025/08/20</td><td><strong>3017</strong></td><td>1,005.0</td><td><span class="tag tag-tp">停利</span></td><td>57天</td><td class="green">+59.8%</td><td class="green">+73,390</td></tr>
+<tr><td>2025/08/22</td><td><strong>1519</strong></td><td>597.0</td><td><span class="tag tag-tp">停利</span></td><td>19天</td><td class="red">-6.7%</td><td class="red">-9,078</td></tr>
+<tr><td>2025/09/03</td><td><strong>5536</strong></td><td>854.0</td><td><span class="tag tag-tp">停利</span></td><td>37天</td><td class="green">+69.4%</td><td class="green">+85,685</td></tr>
+<tr><td>2025/09/12</td><td><strong>3406</strong></td><td>415.5</td><td><span class="tag tag-sl">停損</span></td><td>14天</td><td class="red">-7.3%</td><td class="red">-9,759</td></tr>
+<tr><td>2025/09/26</td><td><strong>4728</strong></td><td>404.0</td><td><span class="tag tag-tp">停利</span></td><td>83天</td><td class="green">+1.5%</td><td class="green">+1,145</td></tr>
+<tr><td>2025/09/26</td><td><strong>3533</strong></td><td>1,520.0</td><td><span class="tag tag-tp">停利</span></td><td>19天</td><td class="green">+7.0%</td><td class="green">+8,030</td></tr>
+<tr><td>2025/10/08</td><td><strong>6510</strong></td><td>1,695.0</td><td><span class="tag tag-tp">停利</span></td><td>20天</td><td class="green">+17.3%</td><td class="green">+20,678</td></tr>
+<tr><td>2025/10/14</td><td><strong>3008</strong></td><td>2,240.0</td><td><span class="tag tag-tp">停利</span></td><td>33天</td><td class="red">-5.5%</td><td class="red">-7,451</td></tr>
+<tr><td>2025/10/14</td><td><strong>2382</strong></td><td>284.0</td><td><span class="tag tag-sl">停損</span></td><td>4天</td><td class="red">-7.9%</td><td class="red">-10,610</td></tr>
+<tr><td>2025/10/14</td><td><strong>3413</strong></td><td>308.5</td><td><span class="tag tag-sl">停損</span></td><td>4天</td><td class="red">-8.6%</td><td class="red">-11,413</td></tr>
+<tr><td>2025/11/13</td><td><strong>2357</strong></td><td>633.0</td><td><span class="tag tag-sl">停損</span></td><td>8天</td><td class="red">-8.4%</td><td class="red">-11,121</td></tr>
+<tr><td>2025/12/08</td><td><strong>1795</strong></td><td>291.5</td><td><span class="tag tag-sl">停損</span></td><td>5天</td><td class="red">-7.6%</td><td class="red">-10,193</td></tr>
+<tr><td>2026/01/08</td><td><strong>6223</strong></td><td>2,120.0</td><td><span class="tag tag-tp">停利</span></td><td>26天</td><td class="red">-1.6%</td><td class="red">-2,752</td></tr>
+<tr><td>2026/02/02</td><td><strong>3008</strong></td><td>2,355.0</td><td><span class="tag tag-sl">停損</span></td><td>20天</td><td class="red">-7.1%</td><td class="red">-9,508</td></tr>
+<tr><td>2026/02/10</td><td><strong>1795</strong></td><td>324.5</td><td><span class="tag tag-sl">停損</span></td><td>6天</td><td class="red">-8.5%</td><td class="red">-11,243</td></tr>
+<tr><td>2026/02/23</td><td><strong>6446</strong></td><td>709.0</td><td><span class="tag tag-sl">停損</span></td><td>8天</td><td class="red">-7.1%</td><td class="red">-9,491</td></tr>
+</tbody></table>
+<h2>完整交易總表</h2>
+<table><thead><tr><th>#</th><th>股票</th><th>買入日</th><th>賣出日</th><th>買價</th><th>賣價</th><th>最高</th><th>股數</th><th>報酬</th><th>損益</th><th>天數</th><th>出場</th></tr></thead><tbody>
+<tr><td>1</td><td><strong>6223</strong></td><td>2025/05/05</td><td>2025/07/25</td><td>658.0</td><td>1,010.0</td><td>1,125.0</td><td>189</td><td class="green">+53.5%</td><td class="green">+65,506</td><td>58</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>2</td><td><strong>6510</strong></td><td>2025/05/19</td><td>2025/06/23</td><td>765.0</td><td>820.0</td><td>927.0</td><td>163</td><td class="green">+7.2%</td><td class="green">+8,196</td><td>24</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>3</td><td><strong>3017</strong></td><td>2025/06/02</td><td>2025/08/20</td><td>629.0</td><td>1,005.0</td><td>1,145.0</td><td>198</td><td class="green">+59.8%</td><td class="green">+73,390</td><td>57</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>4</td><td><strong>4728</strong></td><td>2025/06/02</td><td>2025/09/26</td><td>398.0</td><td>404.0</td><td>450.0</td><td>314</td><td class="green">+1.5%</td><td class="green">+1,145</td><td>83</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>5</td><td><strong>5536</strong></td><td>2025/07/14</td><td>2025/09/03</td><td>504.0</td><td>854.0</td><td>981.0</td><td>248</td><td class="green">+69.4%</td><td class="green">+85,685</td><td>37</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>6</td><td><strong>1519</strong></td><td>2025/07/28</td><td>2025/08/22</td><td>640.0</td><td>597.0</td><td>676.0</td><td>195</td><td class="red">-6.7%</td><td class="red">-9,078</td><td>19</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>7</td><td><strong>3008</strong></td><td>2025/08/25</td><td>2025/10/14</td><td>2,370.0</td><td>2,240.0</td><td>2,515.0</td><td>52</td><td class="red">-5.5%</td><td class="red">-7,451</td><td>33</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>8</td><td><strong>3406</strong></td><td>2025/08/25</td><td>2025/09/12</td><td>448.0</td><td>415.5</td><td>462.5</td><td>279</td><td class="red">-7.3%</td><td class="red">-9,759</td><td>14</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>9</td><td><strong>3533</strong></td><td>2025/09/01</td><td>2025/09/26</td><td>1,420.0</td><td>1,520.0</td><td>1,710.0</td><td>88</td><td class="green">+7.0%</td><td class="green">+8,030</td><td>19</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>10</td><td><strong>6510</strong></td><td>2025/09/08</td><td>2025/10/08</td><td>1,445.0</td><td>1,695.0</td><td>1,925.0</td><td>86</td><td class="green">+17.3%</td><td class="green">+20,678</td><td>20</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>11</td><td><strong>2382</strong></td><td>2025/10/07</td><td>2025/10/14</td><td>308.5</td><td>284.0</td><td>308.5</td><td>405</td><td class="red">-7.9%</td><td class="red">-10,610</td><td>4</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>12</td><td><strong>3413</strong></td><td>2025/10/07</td><td>2025/10/14</td><td>337.5</td><td>308.5</td><td>337.5</td><td>370</td><td class="red">-8.6%</td><td class="red">-11,413</td><td>4</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>13</td><td><strong>6274</strong></td><td>2025/11/03</td><td>—</td><td>388.5</td><td>545.0</td><td>577.0</td><td>321</td><td class="green">+40.3%</td><td class="green">+50,059</td><td>74</td><td><span class="tag tag-open">未平倉</span></td></tr>
+<tr><td>14</td><td><strong>2357</strong></td><td>2025/11/03</td><td>2025/11/13</td><td>691.0</td><td>633.0</td><td>691.0</td><td>180</td><td class="red">-8.4%</td><td class="red">-11,121</td><td>8</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>15</td><td><strong>1795</strong></td><td>2025/12/01</td><td>2025/12/08</td><td>315.5</td><td>291.5</td><td>315.5</td><td>396</td><td class="red">-7.6%</td><td class="red">-10,193</td><td>5</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>16</td><td><strong>6223</strong></td><td>2025/12/01</td><td>2026/01/08</td><td>2,155.0</td><td>2,120.0</td><td>2,380.0</td><td>58</td><td class="red">-1.6%</td><td class="red">-2,752</td><td>26</td><td><span class="tag tag-tp">停利</span></td></tr>
+<tr><td>17</td><td><strong>3008</strong></td><td>2026/01/05</td><td>2026/02/02</td><td>2,535.0</td><td>2,355.0</td><td>2,575.0</td><td>49</td><td class="red">-7.1%</td><td class="red">-9,508</td><td>20</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>18</td><td><strong>6510</strong></td><td>2026/01/05</td><td>—</td><td>2,250.0</td><td>3,750.0</td><td>4,000.0</td><td>55</td><td class="green">+66.7%</td><td class="green">+82,324</td><td>31</td><td><span class="tag tag-open">未平倉</span></td></tr>
+<tr><td>19</td><td><strong>1795</strong></td><td>2026/02/02</td><td>2026/02/10</td><td>354.5</td><td>324.5</td><td>363.0</td><td>352</td><td class="red">-8.5%</td><td class="red">-11,243</td><td>6</td><td><span class="tag tag-sl">停損</span></td></tr>
+<tr><td>20</td><td><strong>6446</strong></td><td>2026/02/02</td><td>2026/02/23</td><td>763.0</td><td>709.0</td><td>779.0</td><td>163</td><td class="red">-7.1%</td><td class="red">-9,491</td><td>8</td><td><span class="tag tag-sl">停損</span></td></tr>
+</tbody></table>
+<h2>未平倉部位</h2>
+<table><thead><tr><th>股票</th><th>買入價</th><th>現價</th><th>股數</th><th>市值</th><th>報酬</th><th>未實現</th><th>持有</th></tr></thead><tbody>
+<tr><td><strong>6274</strong></td><td>388.5</td><td>545.0</td><td>321</td><td>174,945</td><td class="green">+40.3%</td><td class="green">+50,059</td><td>74天</td></tr>
+<tr><td><strong>6510</strong></td><td>2,250.0</td><td>3,750.0</td><td>55</td><td>206,250</td><td class="green">+66.7%</td><td class="green">+82,324</td><td>31天</td></tr>
+</tbody></table>
+<h2>績效統計</h2>
+<table><thead><tr><th>項目</th><th>數值</th></tr></thead><tbody>
+<tr><td style="text-align:left;font-weight:bold">初始資金</td><td>500,000</td></tr>
+<tr><td style="text-align:left;font-weight:bold">終值 (含未平倉)</td><td>659,657</td></tr>
+<tr><td style="text-align:left;font-weight:bold">總報酬</td><td>+31.9%</td></tr>
+<tr><td style="text-align:left;font-weight:bold">最大回撤</td><td>-20.2%</td></tr>
+<tr><td style="text-align:left;font-weight:bold">已平倉</td><td>18 筆</td></tr>
+<tr><td style="text-align:left;font-weight:bold">勝率</td><td>7/18 (39%)</td></tr>
+<tr><td style="text-align:left;font-weight:bold">贏家平均</td><td>+30.8% / +37,518</td></tr>
+<tr><td style="text-align:left;font-weight:bold">輸家平均</td><td>-6.9% / -9,329</td></tr>
+<tr><td style="text-align:left;font-weight:bold">盈虧比</td><td>4.4</td></tr>
+<tr><td style="text-align:left;font-weight:bold">獲利總額</td><td>+262,629</td></tr>
+<tr><td style="text-align:left;font-weight:bold">虧損總額</td><td>-102,618</td></tr>
+<tr><td style="text-align:left;font-weight:bold">已實現淨損益</td><td>+160,011</td></tr>
+<tr><td style="text-align:left;font-weight:bold">停損</td><td>8次, 均-7.8%</td></tr>
+<tr><td style="text-align:left;font-weight:bold">停利</td><td>10次, 均+20.2%</td></tr>
+</tbody></table>
+</body></html>
