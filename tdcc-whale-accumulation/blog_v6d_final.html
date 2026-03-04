@@ -1,0 +1,190 @@
+<!-- wp:group {"className":"tldr-summary"} -->
+<div class="wp-block-group tldr-summary">
+<!-- wp:heading {"level":3} -->
+<h3>重點摘要</h3>
+<!-- /wp:heading -->
+<!-- wp:list -->
+<ul>
+<li>從 17,490 筆歷史訊號中，找出 <strong>5 個真正有預測力的籌碼指標</strong></li>
+<li>加入實戰規則（TDCC 延遲、限價買入、買入窗口）後回測 <strong>50 萬 → 79.6 萬 (+59.2%)</strong></li>
+<li>勝率 50%、盈虧比 5.6 — 贏的時候均賺 37.8%，虧的時候均虧 6.8%</li>
+<li>完整 19 條規則 + 每週操作 SOP，可直接程式化執行</li>
+</ul>
+<!-- /wp:list -->
+</div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph -->
+<p>這是大戶吃貨系列的最終篇。前幾篇（<a href="https://blog.tomting.com/?p=516">上篇</a>、<a href="https://blog.tomting.com/?p=517">下篇</a>、<a href="https://blog.tomting.com/?p=524">51週驗證</a>、<a href="https://blog.tomting.com/?p=559">量化因子分析</a>）從假設、驗證、推翻、重建，一路走到可以實際操作的完整策略。這篇整合所有發現，給出<strong>可以直接照做的 19 條規則</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>策略的 19 條規則</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>訊號條件（7 條）</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>#</th><th>條件</th><th>設定</th><th>白話</th></tr></thead><tbody><tr><td>1</td><td>大戶持股比例連續上升</td><td>≥ 2 週</td><td>大戶連續兩週以上在買</td></tr><tr><td>2</td><td>累計 ratio 變化</td><td>≥ 2%</td><td>買的量夠大，不是零星</td></tr><tr><td>3</td><td>大小戶同步性 (sync)</td><td>≥ 50%</td><td>千張大戶和百張中戶同方向買</td></tr><tr><td>4</td><td>持有人數變化</td><td>≤ -2%</td><td>散戶正在離場</td></tr><tr><td>5</td><td>股價</td><td>≥ 300 元</td><td>高價股的大戶才是真大戶</td></tr><tr><td>6</td><td>排除 ETF</td><td>股號 00 開頭</td><td>ETF 的籌碼變化意義不同</td></tr><tr><td>7</td><td>排除特殊事件</td><td>單週 ratio 變動 > 5%</td><td>改股、減資、合併造成的假訊號</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>進場規則（6 條）</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>#</th><th>規則</th><th>設定</th><th>為什麼</th></tr></thead><tbody><tr><td>8</td><td>限價</td><td>訊號日收盤價 × 1.03</td><td>不追高，超過 3% 就不買</td></tr><tr><td>9</td><td>掛單時機</td><td>TDCC 公布後（約延遲 3 天）</td><td>TDCC 數據不是即時的</td></tr><tr><td>10</td><td>買入窗口</td><td>5 個交易日</td><td>一週內買不到就放棄</td></tr><tr><td>11</td><td>每檔金額</td><td>125,000 TWD</td><td>零股交易，300元股約買 400 股</td></tr><tr><td>12</td><td>最多同時持倉</td><td>4 檔</td><td>倉位限制強制選擇，避免分散</td></tr><tr><td>13</td><td>每週最多進場</td><td>2 檔</td><td>控制系統性風險</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>出場規則（3 條）</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>#</th><th>規則</th><th>設定</th><th>白話</th></tr></thead><tbody><tr><td>14</td><td>停損</td><td>成交價 × 0.93</td><td>虧 7% 就走，不凹單</td></tr><tr><td>15</td><td>Trailing Stop</td><td>從最高價回落 10%</td><td>漲上去後保護利潤，只在漲過買入價後啟動</td></tr><tr><td>16</td><td>檢查頻率</td><td>每天收盤</td><td>觸發隔天開盤賣</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>資金管理（3 條）</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>#</th><th>項目</th><th>設定</th></tr></thead><tbody><tr><td>17</td><td>總資金</td><td>500,000 TWD</td></tr><tr><td>18</td><td>每檔配置</td><td>125,000 TWD</td></tr><tr><td>19</td><td>交易成本</td><td>買 0.1425% + 賣 0.4425% = 0.585%</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>為什麼要加實戰進場規則？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>回測的最大謊言是「訊號一出來馬上買」。現實中 TDCC 數據有 3-5 天的延遲，等你看到訊號時股價早就動了。之前的回測假設即時買入得到 +50.2%，但如果你真的照做，這週的 4 個訊號有 3 個在你看到之前就已經跌破停損了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>加入「<strong>收盤價 +3% 限價 + 5 天窗口</strong>」的規則後，75% 的訊號還是買得到，但那些飆太快你追不到的會自動被過濾掉。實測下來，被過濾掉的反而是爛交易居多，所以<strong>實戰版 (+59.2%) 比理想版 (+50.2%) 還好</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>回測績效（含延遲 + 限價）</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>項目</th><th>數值</th></tr></thead><tbody><tr><td>初始資金</td><td>500,000</td></tr><tr><td><strong>終值</strong></td><td><strong>796,073</strong></td></tr><tr><td><strong>總報酬</strong></td><td><strong>+59.2%</strong></td></tr><tr><td>最大回撤</td><td>-16.5%</td></tr><tr><td>已平倉</td><td>16 筆</td></tr><tr><td>勝率</td><td>8/16 (50%)</td></tr><tr><td>贏家平均</td><td>+37.8%</td></tr><tr><td>輸家平均</td><td>-6.8%</td></tr><tr><td><strong>盈虧比</strong></td><td><strong>5.6</strong></td></tr><tr><td>停損</td><td>4 次，均 -7.5%</td></tr><tr><td>追蹤停損</td><td>4 次，均 -5.6%</td></tr><tr><td>停利</td><td>8 次，均 +37.8%</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>完整交易紀錄</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th></th><th>股票</th><th>買入日</th><th>賣出日</th><th>限價買入</th><th>賣價</th><th>報酬</th><th>損益</th><th>天數</th><th>出場</th></tr></thead><tbody><tr><td>🟢</td><td>6223 力旺</td><td>05/08</td><td>07/25</td><td>668</td><td>1,010</td><td>+51.2%</td><td>+62,940</td><td>55</td><td>停利</td></tr><tr><td>🟢</td><td>3017 欣興</td><td>05/22</td><td>08/20</td><td>615</td><td>1,005</td><td>+63.4%</td><td>+78,089</td><td>63</td><td>停利</td></tr><tr><td>🟢</td><td>4728 雙美</td><td>06/05</td><td>09/26</td><td>396.5</td><td>404</td><td>+1.9%</td><td>+1,621</td><td>80</td><td>停利</td></tr><tr><td>🔴</td><td>8210 華晶科</td><td>07/31</td><td>08/04</td><td>513</td><td>476.5</td><td>-7.1%</td><td>-9,560</td><td>2</td><td>停損</td></tr><tr><td>🟢</td><td>5536 聖暉</td><td>07/31</td><td>09/03</td><td>490</td><td>854</td><td>+74.3%</td><td>+91,678</td><td>24</td><td>停利</td></tr><tr><td>🟢</td><td>8210 華晶科</td><td>08/07</td><td>11/18</td><td>530</td><td>933</td><td>+76.0%</td><td>+93,557</td><td>69</td><td>停利</td></tr><tr><td>🔴</td><td>3406 旭隼</td><td>08/21</td><td>09/12</td><td>440.5</td><td>415.5</td><td>-5.7%</td><td>-7,773</td><td>16</td><td>追蹤停損</td></tr><tr><td>🟢</td><td>3533 嘉澤</td><td>09/04</td><td>09/26</td><td>1,410</td><td>1,520</td><td>+7.8%</td><td>+8,911</td><td>16</td><td>停利</td></tr><tr><td>🟢</td><td>6510 穎崴</td><td>09/15</td><td>10/08</td><td>1,400</td><td>1,695</td><td>+21.1%</td><td>+25,410</td><td>15</td><td>停利</td></tr><tr><td>🔴</td><td>2382 廣達</td><td>10/13</td><td>11/17</td><td>294.5</td><td>276</td><td>-6.3%</td><td>-8,540</td><td>24</td><td>追蹤停損</td></tr><tr><td>🟢</td><td>3413 京鼎</td><td>10/14</td><td>11/07</td><td>308.5</td><td>328.5</td><td>+6.5%</td><td>+7,333</td><td>17</td><td>停利</td></tr><tr><td>🔴</td><td>2357 華碩</td><td>11/06</td><td>11/13</td><td>681</td><td>633</td><td>-7.0%</td><td>-9,474</td><td>5</td><td>停損</td></tr><tr><td>🔴</td><td>3443 創意</td><td>12/04</td><td>12/16</td><td>2,125</td><td>2,020</td><td>-4.9%</td><td>-6,784</td><td>8</td><td>追蹤停損</td></tr><tr><td>🔴</td><td>1795 美時</td><td>12/04</td><td>01/06</td><td>298</td><td>272</td><td>-8.7%</td><td>-11,576</td><td>21</td><td>停損</td></tr><tr><td>🔴</td><td>3008 大立光</td><td>01/08</td><td>02/05</td><td>2,475</td><td>2,300</td><td>-7.1%</td><td>-9,435</td><td>20</td><td>停損</td></tr><tr><td>🔴</td><td>1795 美時</td><td>02/05</td><td>02/10</td><td>350</td><td>324.5</td><td>-7.3%</td><td>-9,794</td><td>3</td><td>停損</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>未平倉：6274 台燿 +43.4%、6510 穎崴 +63.4%、6446 祺驊 -1.4%</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>每週操作 SOP</h2>
+<!-- /wp:heading -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>週五/六: TDCC 公布新一週數據
+  → 跑 scan 程式，記下訊號股和「訊號日收盤價」
+
+下週一 (TDCC公布後):
+  → 確認手上持倉 < 4 檔
+  → 掛限價單: 收盤價 × 1.03
+     例: 訊號收盤 342 → 限價 352
+  → 每檔買 125,000 元 (零股)
+  → 5 天內成交就好，沒成交取消
+
+每天收盤:
+  → 跌破成交價 -7% → 隔天停損賣出
+  → 從最高價回落 10% → 隔天停利賣出</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2>心理準備</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list {"ordered":true} -->
+<ol>
+<li><strong>一半的交易會虧錢</strong> — 勝率 50%，每兩筆就有一筆停損</li>
+<li><strong>會連續虧 3-4 筆</strong> — 帳戶可能從 50 萬跌到 45 萬，這是正常的</li>
+<li><strong>靠少數大贏家翻盤</strong> — 一筆 +74% 可以補回 5 筆 -7% 的虧損</li>
+<li><strong>最怕的不是虧損，是虧了之後不敢買</strong> — 機械式執行，不帶感情</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2>這個策略的限制</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>只有一年數據</strong>：需要更長時間驗證是否在不同市場環境下有效</li>
+<li><strong>零股交易</strong>：300 元以上的股票 125K 只能買幾百股，流動性和成交價可能有落差</li>
+<li><strong>TDCC 延遲</strong>：數據晚 3-5 天公布是最大的實戰成本</li>
+<li><strong>高度集中</strong>：同時只持有 4 檔，單一股票的影響很大</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "大戶吃貨策略的勝率和盈虧比是多少？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "含實戰規則的回測結果：勝率 50%、盈虧比 5.6。贏的時候平均賺 37.8%，虧的時候平均只虧 6.8%。靠大贏覆蓋小虧的不對稱報酬模式。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "什麼是大小戶同步性 sync？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "sync = 千張大戶 ratio 變化 / 百張中戶 ratio 變化。衡量真正的大戶和中等規模的投資人是否同方向在買。sync ≥ 50% 表示大戶帶頭、中戶跟進，是最可靠的籌碼訊號。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "為什麼限定股價 300 元以上？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "17,490 筆訊號的量化分析顯示，股價越高大戶訊號越準。300 元股票的 400 張持股代表 1.2 億資金，是真正的法人等級。低價股的大戶可能只是稍微有錢的散戶，訊號雜訊太多。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "為什麼用限價買入而不是市價？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TDCC 數據延遲 3-5 天公布，等你看到訊號時股價已經動了。用訊號日收盤 +3% 當限價，一週內成交就好，這樣可以避免追高。回測顯示限價買入的績效 (+59.2%) 比市價即時買 (+50.2%) 還好，因為天然過濾了追高的虧損交易。"
+      }
+    }
+  ]
+}
+</script>
+<!-- /wp:html -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "台股大戶吃貨完整策略：19條規則+50萬實測+59.2%",
+  "description": "從17490筆訊號中提煉出19條可執行的量化策略規則，含實戰限價買入和TDCC延遲處理，50萬回測一年+59.2%",
+  "author": {"@type": "Person", "name": "Tom Ting"},
+  "datePublished": "2026-03-04",
+  "keywords": ["台股", "TDCC", "大戶吃貨", "量化交易", "持股分散表", "籌碼分析", "trailing stop", "零股交易", "回測"]
+}
+</script>
+<!-- /wp:html -->
