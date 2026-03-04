@@ -2,25 +2,13 @@
   {
     "code": "6446",
     "signal_date": "20260213",
-    "buy_date": "20260223",
-    "buy_price": 709.0,
+    "buy_date": "20260226",
+    "buy_price": 724.0,
     "streak": 6,
     "r400_chg": 3.49,
     "r1000_chg": 2.36,
     "sync": 0.676,
     "holder_chg_pct": -16.3,
     "r400_abs": 56.22
-  },
-  {
-    "code": "6584",
-    "signal_date": "20260213",
-    "buy_date": "20260223",
-    "buy_price": 435.0,
-    "streak": 2,
-    "r400_chg": 5.64,
-    "r1000_chg": 4.51,
-    "sync": 0.8,
-    "holder_chg_pct": -25.72,
-    "r400_abs": 78.96
   }
 ]
