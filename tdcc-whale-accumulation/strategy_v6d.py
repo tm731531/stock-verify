@@ -42,7 +42,7 @@ class StrategyConfig:
     # 資金管理
     capital: float = 500_000        # 初始資金
     per_position: float = 125_000   # 每檔配置
-    max_positions: int = 99          # 由資金自然限制 (500K/125K ≈ 4檔)
+    max_positions: int = 4           # 最多同時持倉 4 檔
     max_entries_per_week: int = 2   # 每週最多進場
 
     # 交易成本
