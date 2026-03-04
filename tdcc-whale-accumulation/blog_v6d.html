@@ -1,0 +1,368 @@
+<!-- wp:group {"className":"tldr-summary"} -->
+<div class="wp-block-group tldr-summary">
+<!-- wp:heading {"level":3} -->
+<h3>重點摘要</h3>
+<!-- /wp:heading -->
+<!-- wp:list -->
+<ul>
+<li>用 <strong>17,490 筆訊號</strong>做量化因子分析，找出真正有預測力的指標</li>
+<li>推翻「低價股盤整吃貨」假設 — 10-50 元勝率僅 5%，<strong>百元以上股票才是 alpha 來源</strong></li>
+<li>最強因子：<strong>大小戶同步性 (sync)</strong>、散戶退場率、大戶持股比例空間</li>
+<li>最佳策略 v6d 實測一年：<strong>50 萬 → 58.7 萬 (+17.4%)</strong>，勝率 41%，盈虧比 2.8</li>
+</ul>
+<!-- /wp:list -->
+</div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph -->
+<p>前兩篇文章（<a href="https://blog.tomting.com/?p=516">上篇</a>、<a href="https://blog.tomting.com/?p=517">下篇</a>）用 12 週數據做了初步分析，<a href="https://blog.tomting.com/?p=524">第三篇</a>擴展到 51 週全量數據驗證。這篇是系列最終章 — 不再靠直覺選參數，而是讓 17,490 筆歷史訊號告訴我們：<strong>哪些指標真的有用、怎麼組合最賺錢</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>研究方法：量化因子分析</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>量化因子分析的核心思路是：把每個可能的「大戶吃貨訊號」都當成一個事件，計算它的各種特徵值，然後統計每個特徵跟「未來 30 天報酬」的關係。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>資料基底</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>資料</th><th>筆數</th><th>涵蓋</th></tr></thead><tbody><tr><td>TDCC 週大股東持股</td><td><strong>116,614</strong></td><td>2,316 股 × 51 週</td></tr><tr><td>日K股價</td><td><strong>528,513</strong></td><td>2,332 股 × 314 天</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>前處理：排除雜訊</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li>排除 ETF（股號 00 開頭）</li>
+<li><strong>單週 ratio 變動 > 5% 的股票整檔排除</strong> — 這些通常是改股、減資、合併等特殊事件，不是真正的大戶買進。共排除 287 檔</li>
+<li>訊號定義：連續 2 週以上大戶持股比例 (400 張以上) 上升</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>清洗後得到 <strong>17,490 筆有效訊號</strong>，基準表現：30 日平均報酬 +1.49%、中位數 -0.42%、勝率 46.4%。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>9 個指標的預測力排名</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>我測試了 9 個候選指標，用 Spearman 相關性衡量每個指標跟未來 30 日報酬的關係：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>指標</th><th>Spearman 相關性</th><th>意義</th></tr></thead><tbody><tr><td><strong>千張大戶 ratio 變化</strong></td><td><strong>+0.0246</strong></td><td>最強正相關 — 真正的大戶（千張以上）動向最重要</td></tr><tr><td><strong>大小戶同步性 (sync)</strong></td><td>+0.0195</td><td>第二強 — 大戶和中戶同方向買才是好訊號</td></tr><tr><td><strong>大戶比例絕對值</strong></td><td><strong>-0.0228</strong></td><td>比例越低越好 — 集中度低的才有漲升空間</td></tr><tr><td>股價</td><td>+0.0064</td><td>微正相關</td></tr><tr><td>持有人數變化</td><td>+0.0057</td><td>幾乎無關</td></tr><tr><td>連續上升週數</td><td>-0.0075</td><td>週數多不代表更好</td></tr><tr><td>股價方向</td><td>-0.0090</td><td>不重要</td></tr><tr><td>盤整幅度</td><td>-0.0099</td><td>不重要</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>推翻假設：低價股盤整吃貨是個陷阱</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>之前的策略 (v5) 假設「10-50 元的低價股，大戶在盤整期偷偷吃貨，之後會飆漲」。數據完全不支持這個假設：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>股價區間</th><th>訊號數</th><th>30日勝率</th><th>30日平均</th></tr></thead><tbody><tr><td>&lt; 10 元</td><td>907</td><td>43.9%</td><td>+0.58%</td></tr><tr><td><strong>10-15 元</strong></td><td>1,671</td><td>49.6%</td><td>+1.89%</td></tr><tr><td>15-20 元</td><td>1,897</td><td>44.4%</td><td>+1.72%</td></tr><tr><td>20-30 元</td><td>3,198</td><td>45.8%</td><td>+1.17%</td></tr><tr><td>30-50 元</td><td>3,535</td><td>45.3%</td><td>+1.16%</td></tr><tr><td>50-100 元</td><td>3,396</td><td>44.8%</td><td>+0.38%</td></tr><tr><td><strong>&gt; 100 元</strong></td><td><strong>2,886</strong></td><td><strong>50.5%</strong></td><td><strong>+3.50%</strong></td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p><strong>百元以上的股票，大戶吃貨訊號的預測力是最強的</strong>。30 日勝率 50.5%、平均報酬 +3.50%，遠超其他價格帶。60 日更明顯：勝率 53.4%、平均 +7.97%。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>為什麼？低價股的「大戶」往往不是真大戶。400 張以上在 15 元的股票只代表 600 萬的持倉，對法人來說根本不算什麼。但 400 張在 200 元的股票是 8,000 萬，那才是真正有意義的大資金布局。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>同步性 (sync)：最被低估的指標</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>同步性是這次研究最重要的新發現。它的定義是：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>sync = 千張大戶 ratio 變化 / 百張中戶 ratio 變化</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>sync 衡量的是「大戶和中戶是不是同方向在買」。結果顯示 <strong>sync 30-80% 是甜蜜點</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>同步性</th><th>訊號數</th><th>勝率</th><th>平均報酬</th></tr></thead><tbody><tr><td>反向（大戶沒動）</td><td>5,439</td><td>44.4%</td><td>+0.97%</td></tr><tr><td>0-30%</td><td>2,479</td><td>46.8%</td><td>+1.30%</td></tr><tr><td><strong>30-60%</strong></td><td><strong>1,656</strong></td><td><strong>49.8%</strong></td><td><strong>+1.60%</strong></td></tr><tr><td><strong>60-80%</strong></td><td><strong>1,333</strong></td><td><strong>51.5%</strong></td><td><strong>+2.33%</strong></td></tr><tr><td>80-100%</td><td>2,409</td><td>45.7%</td><td>+1.74%</td></tr><tr><td>&gt; 100%</td><td>4,174</td><td>46.1%</td><td>+1.84%</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>sync > 100% 表示大戶比中戶買更多，但效果反而下降 — 這可能代表特殊事件（如合併換股）。最健康的訊號是「大戶帶頭買、中戶跟進」的 30-80% 區間。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>最佳因子組合搜索</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>接下來用窮舉法測試所有 2 因子和 3 因子組合，計算每個組合的信心加權分數（報酬 × 樣本信心 × 勝率）。全市場最強組合：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>排名</th><th>因子組合</th><th>訊號數</th><th>勝率</th><th>平均報酬</th></tr></thead><tbody><tr><td>1</td><td><strong>sync≥50% + 散戶↓≥2% + 股價&gt;100</strong></td><td>689</td><td><strong>57.8%</strong></td><td><strong>+7.53%</strong></td></tr><tr><td>2</td><td>千張↑&gt;0 + 散戶↓≥2% + 股價&gt;100</td><td>879</td><td>56.2%</td><td>+6.61%</td></tr><tr><td>3</td><td>千張↑≥1% + 散戶↓≥2% + 股價&gt;100</td><td>579</td><td>55.6%</td><td>+6.52%</td></tr><tr><td>4</td><td>ratio↑≥2% + sync≥50% + 股價&gt;100</td><td>359</td><td>56.8%</td><td>+6.36%</td></tr><tr><td>5</td><td>ratio↑≥2% + 千張↑≥1% + 股價&gt;100</td><td>437</td><td>56.1%</td><td>+6.01%</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>所有 Top 5 組合都包含「<strong>股價 > 100</strong>」和至少一個籌碼集中度指標。盤整定義完全沒有出現在前 20 名。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>最佳策略 v6d：完整定義</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>基於量化分析結果，定義 v6d 策略：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>進場條件：
+  ✅ 連續 ≥ 2 週大戶持股比例上升
+  ✅ 400張+ ratio 累計變化 ≥ 2%
+  ✅ 大小戶同步性 ≥ 50%
+  ✅ 持有人數累計下降 ≥ 2%（散戶退場）
+  ✅ 股價 > 100 元
+  ✗ 排除 ETF、排除單週 ratio 變動 > 5% 的特殊事件
+
+出場條件：
+  🔴 停損：跌破買入價 -7%
+  🟢 停利：從最高價回落 10%（trailing stop）
+
+資金管理：
+  💰 初始資金 500,000 TWD
+  📊 每檔 125,000 TWD（4 檔配置）
+  ⏱ 每週最多進場 2 檔</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2>50 萬一整年的實操紀錄</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>用 2025/3 ~ 2026/2 的完整數據做逐日模擬，記錄每一筆交易：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>月度淨值走勢</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>月份</th><th>月底淨值</th><th>月報酬</th><th>累計報酬</th><th>持倉</th></tr></thead><tbody><tr><td>2025/03</td><td>474,572</td><td>-5.1%</td><td>-5.1%</td><td>2 檔</td></tr><tr><td>2025/04</td><td>448,790</td><td>-5.4%</td><td><strong>-10.2%</strong></td><td>2 檔</td></tr><tr><td>2025/05</td><td>482,392</td><td>+7.5%</td><td>-3.5%</td><td>2 檔</td></tr><tr><td>2025/06</td><td>496,897</td><td>+5.2%</td><td>-0.6%</td><td>3 檔</td></tr><tr><td>2025/07</td><td>514,135</td><td>+2.8%</td><td>+2.8%</td><td>3 檔</td></tr><tr><td>2025/08</td><td>544,130</td><td>+5.3%</td><td>+8.8%</td><td>3 檔</td></tr><tr><td>2025/09</td><td>549,745</td><td>+4.4%</td><td>+9.9%</td><td>3 檔</td></tr><tr><td>2025/10</td><td>617,507</td><td>+11.6%</td><td><strong>+23.5%</strong></td><td>4 檔</td></tr><tr><td>2025/11</td><td>603,415</td><td>-2.1%</td><td>+20.7%</td><td>4 檔</td></tr><tr><td>2025/12</td><td>600,652</td><td>+0.2%</td><td>+20.1%</td><td>3 檔</td></tr><tr><td>2026/01</td><td>663,722</td><td>+10.4%</td><td>+32.7%</td><td>3 檔</td></tr><tr><td>2026/02</td><td>669,563</td><td>+1.4%</td><td><strong>+33.9%</strong></td><td>3 檔</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>逐筆交易紀錄</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>2025 年 3-4 月：開局即遇崩盤</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>日期</th><th>操作</th><th>股票</th><th>買/賣價</th><th>報酬</th><th>損益</th><th>持有</th></tr></thead><tbody><tr><td>03/24</td><td>🔵 買</td><td>2421 建準</td><td>104.5</td><td></td><td></td><td></td></tr><tr><td>03/24</td><td>🔵 買</td><td>6274 台燿</td><td>176.5</td><td></td><td></td><td></td></tr><tr><td>03/27</td><td>🔴 停損</td><td>2421 建準</td><td>97.1</td><td>-7.1%</td><td>-9,542</td><td>3天</td></tr><tr><td>03/31</td><td>🔴 停損</td><td>6274 台燿</td><td>155.0</td><td>-12.2%</td><td>-15,886</td><td>5天</td></tr><tr><td>04/07</td><td>🔵 買</td><td>6829 亞泰</td><td>133.0</td><td></td><td></td><td></td></tr><tr><td>04/07</td><td>🔵 買</td><td>4576 大銀微</td><td>112.5</td><td></td><td></td><td></td></tr><tr><td>04/08</td><td>🔴 停損</td><td>6829 亞泰</td><td>120.0</td><td>-9.8%</td><td>-12,884</td><td>1天</td></tr><tr><td>04/08</td><td>🔴 停損</td><td>4576 大銀微</td><td>101.5</td><td>-9.8%</td><td>-12,898</td><td>1天</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>開局慘烈，四筆全停損，帳戶從 50 萬跌到 44.9 萬（-10.2%）。但 -7% 停損確實控住了每筆虧損，沒有任何一筆變成重傷。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>2025 年 5-7 月：力旺翻轉</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>日期</th><th>操作</th><th>股票</th><th>買/賣價</th><th>報酬</th><th>損益</th><th>持有</th></tr></thead><tbody><tr><td>05/05</td><td>🔵 買</td><td>6223 力旺</td><td>658.0</td><td></td><td></td><td></td></tr><tr><td>05/05</td><td>🔵 買</td><td>2753 華信科</td><td>186.0</td><td></td><td></td><td></td></tr><tr><td>06/02</td><td>🔵 買</td><td>2421 建準</td><td>102.0</td><td></td><td></td><td></td></tr><tr><td>06/09</td><td>🔴 停利</td><td>2753 華信科</td><td>180.0</td><td>-3.2%</td><td>-4,745</td><td>24天</td></tr><tr><td>06/09</td><td>🔵 買</td><td>3036 文曄</td><td>127.5</td><td></td><td></td><td></td></tr><tr><td>07/07</td><td>🔴 停利</td><td>3036 文曄</td><td>125.5</td><td>-1.6%</td><td>-2,682</td><td>20天</td></tr><tr><td>07/07</td><td>🔵 買</td><td>9958 世紀鋼</td><td>216.5</td><td></td><td></td><td></td></tr><tr><td>07/16</td><td>🔴 停損</td><td>9958 世紀鋼</td><td>200.0</td><td>-7.6%</td><td>-10,209</td><td>7天</td></tr><tr><td>07/21</td><td>🔵 買</td><td>3037 欣興</td><td>133.5</td><td></td><td></td><td></td></tr><tr><td>07/25</td><td>🟢 <strong>停利</strong></td><td><strong>6223 力旺</strong></td><td><strong>1,010.0</strong></td><td><strong>+53.5%</strong></td><td><strong>+65,506</strong></td><td>58天</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>力旺一筆 +53.5%（+65,506），不但補回之前所有虧損，還讓帳戶翻正。這就是「截虧讓利」策略的核心：一筆大贏可以覆蓋很多筆小虧。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>2025 年 8-11 月：穩定獲利期</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>日期</th><th>操作</th><th>股票</th><th>買/賣價</th><th>報酬</th><th>損益</th><th>持有</th></tr></thead><tbody><tr><td>08/01</td><td>🔵 買</td><td>6239 力成</td><td>123.5</td><td></td><td></td><td></td></tr><tr><td>09/01</td><td>🟢 停利</td><td>3037 欣興</td><td>134.5</td><td>+0.7%</td><td>+201</td><td>30天</td></tr><tr><td>09/01</td><td>🔵 買</td><td>3533 嘉澤</td><td>1,420.0</td><td></td><td></td><td></td></tr><tr><td>09/26</td><td>🟢 停利</td><td>2421 建準</td><td>121.0</td><td><strong>+18.6%</strong></td><td><strong>+22,441</strong></td><td>84天</td></tr><tr><td>09/26</td><td>🟢 停利</td><td>3533 嘉澤</td><td>1,520.0</td><td>+7.0%</td><td>+8,030</td><td>19天</td></tr><tr><td>09/30</td><td>🔵 買</td><td>5289 宜鼎</td><td>329.5</td><td></td><td></td><td></td></tr><tr><td>10/07</td><td>🔵 買</td><td>3231 緯創</td><td>156.0</td><td></td><td></td><td></td></tr><tr><td>10/14</td><td>🔴 停損</td><td>3231 緯創</td><td>138.0</td><td>-11.5%</td><td>-15,085</td><td>4天</td></tr><tr><td>11/03</td><td>🔵 買</td><td>2357 華碩</td><td>691.0</td><td></td><td></td><td></td></tr><tr><td>11/04</td><td>🟢 停利</td><td>3260 威剛</td><td>181.0</td><td>+4.0%</td><td>+4,273</td><td>18天</td></tr><tr><td>11/13</td><td>🔴 停損</td><td>2357 華碩</td><td>633.0</td><td>-8.4%</td><td>-11,121</td><td>8天</td></tr><tr><td>11/14</td><td>🟢 <strong>停利</strong></td><td><strong>6239 力成</strong></td><td><strong>160.5</strong></td><td><strong>+30.0%</strong></td><td><strong>+36,547</strong></td><td>71天</td></tr><tr><td>11/21</td><td>🟢 <strong>停利</strong></td><td><strong>5289 宜鼎</strong></td><td><strong>493.5</strong></td><td><strong>+49.8%</strong></td><td><strong>+61,150</strong></td><td>35天</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>力成 +30%、宜鼎 +49.8%、建準 +18.6%，連續出現大贏家。帳戶在 10 月底達到 61.7 萬（+23.5%）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>2025/12 ~ 2026/02：穎崴再創新高</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>日期</th><th>操作</th><th>股票</th><th>買/賣價</th><th>報酬</th><th>損益</th><th>持有</th></tr></thead><tbody><tr><td>12/01</td><td>🔵 買</td><td>3010 華立</td><td>105.5</td><td></td><td></td><td></td></tr><tr><td>12/01</td><td>🔵 買</td><td>3443 創意</td><td>2,185.0</td><td></td><td></td><td></td></tr><tr><td>12/16</td><td>🔴 停損</td><td>3443 創意</td><td>2,020.0</td><td>-7.6%</td><td>-10,092</td><td>11天</td></tr><tr><td>12/30</td><td>🟢 停利</td><td>3010 華立</td><td>106.0</td><td>+0.5%</td><td>-141</td><td>20天</td></tr><tr><td>01/05</td><td>🔵 買</td><td>2455 全新</td><td>148.5</td><td></td><td></td><td></td></tr><tr><td>01/05</td><td>🔵 買</td><td><strong>6510 穎崴</strong></td><td><strong>2,250.0</strong></td><td></td><td></td><td></td></tr><tr><td>01/08</td><td>🔴 停利</td><td>6271 同欣電</td><td>123.0</td><td>-2.0%</td><td>-3,210</td><td>41天</td></tr><tr><td>02/02</td><td>🟢 停利</td><td>2455 全新</td><td>156.5</td><td>+5.4%</td><td>+5,968</td><td>20天</td></tr><tr><td>02/06</td><td>🟢 停利</td><td>3189 景碩</td><td>242.5</td><td>+1.3%</td><td>+826</td><td>4天</td></tr><tr><td>02/10</td><td>🔴 停利</td><td>8467 波若威</td><td>171.0</td><td>-6.8%</td><td>-9,206</td><td>6天</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>穎崴 (6510) 在 2026 年 1 月以 2,250 元買入，2 月時漲到 3,750 元（+66.7%），是目前唯一的未平倉部位。帳戶在 2 月底達到最高峰 <strong>66.9 萬 (+33.9%)</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>績效總結</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>項目</th><th>數值</th></tr></thead><tbody><tr><td>初始資金</td><td>500,000</td></tr><tr><td>終值（含未平倉）</td><td><strong>587,063</strong></td></tr><tr><td>總報酬</td><td><strong>+17.4%</strong></td></tr><tr><td>最大回撤</td><td>-17.7%</td></tr><tr><td>已平倉交易</td><td>22 筆</td></tr><tr><td>勝率</td><td>41% (9/22)</td></tr><tr><td>贏家平均報酬</td><td>+18.9%</td></tr><tr><td>輸家平均報酬</td><td>-6.7%</td></tr><tr><td><strong>盈虧比</strong></td><td><strong>2.8</strong></td></tr><tr><td>停損次數</td><td>8 次 (平均 -9.2%)</td></tr><tr><td>停利次數</td><td>14 次 (平均 +11.2%，勝率 77%)</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>v5 (原始假設) vs v6d (量化最佳) 對決</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>用完全相同的資金和出場條件，只改進場條件：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th></th><th>v5（低價盤整吃貨）</th><th>v6d（量化最佳）</th></tr></thead><tbody><tr><td>進場條件</td><td>3週升, ratio 2-10%, 盤整 5-15%, 10-50元</td><td>2週升, ratio≥2%, sync≥50%, 散戶↓, &gt;100元</td></tr><tr><td>總報酬</td><td><strong>-6.5%</strong></td><td><strong>+17.4%</strong></td></tr><tr><td>最大回撤</td><td>-18.9%</td><td>-17.7%</td></tr><tr><td>交易筆數</td><td>18</td><td>22</td></tr><tr><td>勝率</td><td>27.8%</td><td><strong>41%</strong></td></tr><tr><td>盈虧比</td><td>2.05</td><td><strong>2.8</strong></td></tr><tr><td>獲利金額</td><td>+76,522</td><td><strong>+204,942</strong></td></tr><tr><td>虧損金額</td><td>-105,821</td><td>-117,703</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>兩個策略虧損金額差不多（-10.6 萬 vs -11.8 萬），但 v6d 的獲利是 v5 的 <strong>2.7 倍</strong>。關鍵差異是勝率：v5 只有 27.8%（18 筆中贏 5 筆），v6d 有 41%（22 筆中贏 9 筆）。低價股的大戶吃貨訊號品質太差，很多 sync=0（千張大戶根本沒動，只有百張中戶在買）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>這個策略的真實面貌</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在宣稱「年化 17%」之前，誠實面對幾個事實：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>1. 靠少數大贏家撐起全年</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>全年 87,063 元的利潤，其中四筆大贏家就貢獻了 185,644 元（力旺 +65K、宜鼎 +61K、力成 +37K、建準 +22K）。拿掉任何一筆，報酬就大打折扣。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>2. 連續虧損的心理壓力</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>開局四筆全停損，帳戶從 50 萬跌到 44.9 萬。如果不是機械式執行，很多人在第三筆停損時就會懷疑人生、第四筆時放棄策略。但正是堅持到第五筆（力旺），才翻轉了全年。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>3. 樣本量的隱憂</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>只有一年數據、22 筆交易。統計上這個樣本量無法確認策略是否有長期 edge，還是剛好遇到對的市場環境。需要更長時間的驗證。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>4. 位置配置很重要</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>測試了從 2 檔到 10 檔的不同配置，4 檔 × 125K 的報酬回撤比最佳。太分散（10 檔 × 50K）反而虧損，因為好訊號被稀釋了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>結論：數據驅動的策略修正</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list {"ordered":true} -->
+<ol>
+<li><strong>「低價股盤整吃貨會飆」是錯的</strong> — 數據顯示 10-50 元區間的大戶吃貨訊號預測力最差</li>
+<li><strong>百元以上的股票才是真戰場</strong> — 同樣的籌碼指標，在高價股上的預測力遠勝低價股</li>
+<li><strong>同步性 (sync) 是最被低估的指標</strong> — 大戶帶頭、中戶跟進的 30-80% 同步區間效果最好</li>
+<li><strong>盤整定義基本無效</strong> — 不管高低差 5% 或 25%，對未來報酬幾乎沒有預測力</li>
+<li><strong>「截虧讓利」是唯一可行的模式</strong> — 41% 勝率 + 2.8 盈虧比，靠少數大贏覆蓋多數小虧</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>下一步是取得更長時間的歷史數據（2-3 年），驗證這個策略在不同市場環境下的表現。同時也在考慮加入成交量維度，看「放量突破 + 大戶吃貨」是否能進一步提升勝率。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "TDCC大戶吃貨訊號在什麼股價區間最有效？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "根據 17,490 筆訊號的量化分析，股價 100 元以上的股票大戶吃貨訊號最有效，30 日勝率 50.5%、平均報酬 +3.50%。10-50 元低價股的勝率和報酬都明顯偏低。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "什麼是大小戶同步性 (sync)？為什麼重要？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "同步性衡量千張大戶和百張中戶是否同方向買進。sync = 千張 ratio 變化 / 百張 ratio 變化。30-80% 的同步區間效果最好，表示大戶帶頭買、中戶跟進，是最健康的籌碼變化模式。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "v6d 策略的停損停利怎麼設定？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "停損設在買入價 -7%（固定比例），停利用 10% trailing stop（從最高價回落 10% 就出場）。這個組合讓虧損筆平均 -6.7%，獲利筆平均 +18.9%，達到 2.8 的盈虧比。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "50萬本金用這個策略一年能賺多少？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "2025/3 到 2026/2 的回測結果是 50 萬變 58.7 萬（+17.4%），但需注意：最大回撤 -17.7%、勝率僅 41%、獲利高度依賴少數大贏家。且僅一年數據，樣本量不足以確認長期有效性。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "為什麼盤整期間的股價波動幅度不是好的篩選指標？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "量化分析顯示盤整高低差（不管 5% 或 25%）與未來報酬的 Spearman 相關性僅 -0.0099，幾乎沒有預測力。之前假設的「盤整 5-15%」條件在組合搜索中完全沒有進入前 20 名。"
+      }
+    }
+  ]
+}
+</script>
+<!-- /wp:html -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "用17490筆訊號找出台股大戶吃貨的最佳量化策略",
+  "description": "用量化因子分析推翻低價股盤整吃貨假設，找出百元以上股票的最佳大戶吃貨策略，50萬實測一年+17.4%",
+  "author": {
+    "@type": "Person",
+    "name": "Tom Ting"
+  },
+  "datePublished": "2026-03-04",
+  "keywords": ["台股", "TDCC", "大戶吃貨", "量化交易", "持股分散表", "因子分析", "回測", "trailing stop", "籌碼分析", "百元股"]
+}
+</script>
+<!-- /wp:html -->
