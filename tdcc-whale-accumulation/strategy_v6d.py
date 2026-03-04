@@ -32,7 +32,7 @@ import sys
 @dataclass
 class StrategyConfig:
     # 進場
-    min_streak: int = 2             # 最少連續上升週數
+    min_streak: int = 3             # 最少連續上升週數
     min_r400_chg: float = 2.0       # 400張+ ratio 最低累計變化 %
     min_sync: float = 0.5           # 大小戶同步性下限 (千張變化/百張變化)
     max_holder_chg: float = -2.0    # 持有人數變化上限 % (負 = 散戶走)

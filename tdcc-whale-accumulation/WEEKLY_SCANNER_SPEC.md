@@ -16,7 +16,7 @@
 
 ```
 weekly_scanner.py          ← 唯一的主程式
-├── 1. 抓 TDCC 數據 (最新 2 週)
+├── 1. 抓 TDCC 數據 (最新 4 週)
 ├── 2. 抓股價 (訊號股的最新收盤)
 ├── 3. 策略篩選
 ├── 4. 輸出結果
@@ -178,13 +178,14 @@ def check_signal(this_week, last_week, price):
 
 因為我們只抓兩週數據，所以**只能判斷這兩週之間是否上升**。這等同於 `streak >= 1`（至少一週上升）。
 
-如果要嚴格要求 `streak >= 2`（連續兩週上升），需要抓三週數據。**建議抓三週**，多一次 TDCC 查詢但訊號品質更好。
+需要 `streak >= 3`（連續三週上升），所以要抓四週數據。
 
-用三週的話：
+用四週的話：
 ```python
-# week1 (最舊) → week2 → week3 (最新)
-# 需要: week2 > week1 AND week3 > week2
-streak_2 = (week3['ratio_400_above'] > week2['ratio_400_above']) and \
+# week1 (最舊) → week2 → week3 → week4 (最新)
+# 需要: week4 > week3 AND week3 > week2 AND week2 > week1
+streak_3 = (week4['ratio_400_above'] > week3['ratio_400_above']) and \
+           (week3['ratio_400_above'] > week2['ratio_400_above']) and \
            (week2['ratio_400_above'] > week1['ratio_400_above'])
 ```
 
