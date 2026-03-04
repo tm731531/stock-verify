@@ -1,9 +1,14 @@
 """
-v6d 大戶吃貨量化策略
-====================
+v6d 大戶吃貨量化策略 (最終修正版)
+=====================================
 進場: ≥2週連升 + ratio↑≥2% + sync≥50% + 散戶↓≥2% + 股價≥300
-出場: -7% 停損 | 10% trailing stop
+出場: -7% 停損 | 漲15%後啟動10% trailing stop | 90天到期
 資金: 每檔 125,000 TWD | 最多 4 檔 | 每週最多進 2 檔
+
+修正項:
+  1. 前瞻偏差: 特殊事件排除只看訊號日之前的數據
+  2. Trailing stop: 漲15%以上才啟動 (避免假停利)
+  3. 最長持有: 90天到期強制出場 (防資金卡死)
 
 用法:
     python strategy_v6d.py scan          # 掃描當前訊號
@@ -38,6 +43,8 @@ class StrategyConfig:
     # 出場
     stop_loss_pct: float = -7.0     # 停損 %
     trailing_stop_pct: float = 10.0 # 從最高價回落 % 就出場
+    trailing_activate_pct: float = 15.0  # 漲超過此 % 才啟動 trailing stop
+    max_hold_days: int = 90         # 最長持有天數, 到期強制出場
 
     # 資金管理
     capital: float = 500_000        # 初始資金
@@ -71,22 +78,27 @@ def load_data():
 
 
 def prepare_data(holdings, prices, cfg: StrategyConfig):
-    """前處理: 排除 ETF 和特殊事件, 建立價格索引"""
+    """前處理: 排除 ETF, 建立價格索引和特殊事件標記"""
     if cfg.exclude_etf:
         holdings = holdings[~holdings['stock_code'].str.startswith('00')]
 
     holdings = holdings.sort_values(['stock_code', 'date'])
     holdings['ratio_diff'] = holdings.groupby('stock_code')['ratio_400_above'].diff()
-    bad_codes = set(
-        holdings[holdings['ratio_diff'].abs() > cfg.max_single_week_ratio_chg]['stock_code'].unique()
-    )
-    holdings = holdings[~holdings['stock_code'].isin(bad_codes)]
+
+    # 修正: 用累計標記取代整檔排除, 避免前瞻偏差
+    # special_flag[code][date] = True 表示該股票在 date 之前曾有 >5% 單週變動
+    special_flag = {}
+    for code, grp in holdings.groupby('stock_code'):
+        grp = grp.sort_values('date')
+        rd = grp['ratio_400_above'].diff().abs()
+        cum_special = (rd > cfg.max_single_week_ratio_chg).cummax()
+        special_flag[code] = dict(zip(grp['date'].values, cum_special.values))
 
     price_idx = {}
     for code, grp in prices.groupby('stock_code'):
         price_idx[code] = grp.sort_values('date')[['date', 'close_price']].values
 
-    return holdings, price_idx, bad_codes
+    return holdings, price_idx, special_flag
 
 
 # ============================================================
@@ -107,7 +119,8 @@ class Signal:
     r400_abs: float         # 當前 400張+ ratio
 
 
-def scan_signals(holdings, price_idx, cfg: StrategyConfig) -> list[Signal]:
+def scan_signals(holdings, price_idx, cfg: StrategyConfig,
+                  special_flag: dict = None) -> list[Signal]:
     """掃描所有符合條件的進場訊號"""
     signals = []
 
@@ -119,6 +132,11 @@ def scan_signals(holdings, price_idx, cfg: StrategyConfig) -> list[Signal]:
         dates = grp['date'].values
 
         for i in range(cfg.min_streak, len(dates)):
+            # 修正: 用 point-in-time 排除特殊事件 (不用未來數據)
+            if special_flag and code in special_flag:
+                if special_flag[code].get(dates[i], False):
+                    continue
+
             # 計算連續上升週數
             streak = 0
             for j in range(i, 0, -1):
@@ -157,16 +175,29 @@ def scan_signals(holdings, price_idx, cfg: StrategyConfig) -> list[Signal]:
             if price < cfg.min_price:
                 continue
 
-            # 買入日 = 訊號日之後的第一個交易日
-            buy_cands = parr[parr[:, 0] > dates[i]]
-            if len(buy_cands) == 0:
+            # 買入: 延遲 3 天 + 收盤+3% 限價 + 5 天窗口
+            after = parr[parr[:, 0] > dates[i]]
+            if len(after) < 4:
+                continue
+            limit_price = price * 1.03
+            window = after[3:8]  # day 3 to 7
+            bought = False
+            buy_date = None
+            buy_price = None
+            for k in range(len(window)):
+                if float(window[k, 1]) <= limit_price:
+                    buy_date = window[k, 0]
+                    buy_price = min(limit_price, float(window[k, 1]))
+                    bought = True
+                    break
+            if not bought:
                 continue
 
             signals.append(Signal(
                 code=code,
                 signal_date=dates[i],
-                buy_date=buy_cands[0, 0],
-                buy_price=float(buy_cands[0, 1]),
+                buy_date=buy_date,
+                buy_price=buy_price,
                 streak=streak,
                 r400_chg=r400_chg,
                 r1000_chg=r1000_chg,
@@ -254,11 +285,15 @@ def simulate_portfolio(signals: list[Signal], price_idx: dict, prices: pd.DataFr
             ret_pct = (cp - pos.buy_price) / pos.buy_price * 100
             drawdown_pct = (cp - pos.peak_price) / pos.peak_price * 100
 
+            peak_gain_pct = (pos.peak_price - pos.buy_price) / pos.buy_price * 100
+
             exit_reason = None
             if ret_pct <= cfg.stop_loss_pct:
                 exit_reason = '停損'
-            elif pos.peak_price > pos.buy_price and drawdown_pct <= -cfg.trailing_stop_pct:
+            elif peak_gain_pct >= cfg.trailing_activate_pct and drawdown_pct <= -cfg.trailing_stop_pct:
                 exit_reason = '停利' if ret_pct > 0 else '追蹤停損'
+            elif pos.days_held >= cfg.max_hold_days:
+                exit_reason = '到期'
 
             if exit_reason:
                 sell_value = pos.shares * cp
@@ -448,15 +483,17 @@ def main():
 
     print(f"  載入資料...")
     holdings, prices = load_data()
-    holdings, price_idx, bad_codes = prepare_data(holdings, prices, CFG)
-    print(f"  排除 {len(bad_codes)} 檔特殊事件股票")
+    holdings, price_idx, special_flag = prepare_data(holdings, prices, CFG)
+    n_special = sum(1 for flags in special_flag.values() if any(flags.values()))
+    print(f"  特殊事件股票: {n_special} 檔 (point-in-time 排除)")
 
     if cmd == 'scan':
         print(f"\n  策略: ≥{CFG.min_streak}週連升 | ratio↑≥{CFG.min_r400_chg}%"
               f" | sync≥{CFG.min_sync:.0%} | 散戶↓≥{abs(CFG.max_holder_chg)}%"
-              f" | 股價≥{CFG.min_price:.0f}")
+              f" | 股價≥{CFG.min_price:.0f}"
+              f" | trailing {CFG.trailing_activate_pct:.0f}%啟動 | {CFG.max_hold_days}天到期")
 
-        signals = scan_signals(holdings, price_idx, CFG)
+        signals = scan_signals(holdings, price_idx, CFG, special_flag)
         print_scan_results(signals, CFG)
 
         # 匯出 JSON
@@ -466,14 +503,14 @@ def main():
             export_signals_json(current, str(Path(__file__).parent / 'data' / 'current_signals.json'))
 
     elif cmd == 'backtest':
-        signals = scan_signals(holdings, price_idx, CFG)
+        signals = scan_signals(holdings, price_idx, CFG, special_flag)
         print(f"  訊號數: {len(signals)}")
 
         result = simulate_portfolio(signals, price_idx, prices, CFG)
         print_portfolio_result(result, CFG)
 
     elif cmd == 'portfolio':
-        signals = scan_signals(holdings, price_idx, CFG)
+        signals = scan_signals(holdings, price_idx, CFG, special_flag)
         result = simulate_portfolio(signals, price_idx, prices, CFG)
         print_portfolio_result(result, CFG)
 
