@@ -258,7 +258,7 @@ def simulate_portfolio(signals: list[Signal], price_idx: dict, prices: pd.DataFr
             if ret_pct <= cfg.stop_loss_pct:
                 exit_reason = '停損'
             elif pos.peak_price > pos.buy_price and drawdown_pct <= -cfg.trailing_stop_pct:
-                exit_reason = '停利'
+                exit_reason = '停利' if ret_pct > 0 else '追蹤停損'
 
             if exit_reason:
                 sell_value = pos.shares * cp
