@@ -1,5 +1,5 @@
 """
-v7 雙引擎量化策略（v7.1 最佳化版）
+v7 雙引擎量化策略（v7.2 最佳化版）
 ===========================================
 主引擎（v6d 繼承）：大戶連升進場
   條件: ≥3週連升 + ratio↑≥3% + sync≥50% + 散戶↓≥2% + 股價≥300
@@ -17,7 +17,7 @@ v7 雙引擎量化策略（v7.1 最佳化版）
 
 資金: 500,000 TWD | 4倉 | 每倉125,000 | 每週最多2筆
 
-回測績效 (2022-2025): 報酬+114.3% | 最大回撤-11.0% | Calmar 10.41
+回測績效 (2022-2025): 報酬+144.2% | 最大回撤-8.8% | Calmar 16.38
 
 用法:
     python strategy_v7.py scan      # 本週雙引擎掃描
@@ -215,11 +215,11 @@ def scan_main_engine(holdings: pd.DataFrame, price_idx: dict,
             price = float(parr[pi, 1])
             if price < cfg.min_price_main: continue
 
-            # 買入：延遲3天 + 收盤+3%限價 + 5天窗口
+            # 買入：延遲2天 + 收盤+3%限價 + 5天窗口
             after = parr[parr[:, 0] > dates[i]]
-            if len(after) < 4: continue
+            if len(after) < 3: continue
             limit = price * 1.03
-            window = after[3:8]
+            window = after[2:7]
             bought = False
             for k in range(len(window)):
                 if float(window[k, 1]) <= limit:
