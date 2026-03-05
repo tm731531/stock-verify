@@ -33,6 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import json
 import sys
+import datetime
 
 # ── 策略參數 ──────────────────────────────────────────────────
 
@@ -167,7 +168,7 @@ def build_ma_index(price_idx: dict, period: int):
 def scan_main_engine(holdings: pd.DataFrame, price_idx: dict,
                      cfg: V7Config) -> list[Signal]:
     """大戶連升進場訊號"""
-    # 特殊事件標記（point-in-time）
+    # 特殊事件標記（cummax：歷史上曾有單週 >5% 則永久排除）
     special_flag = {}
     for code, grp in holdings.groupby('stock_code'):
         grp = grp.sort_values('date')
@@ -207,6 +208,7 @@ def scan_main_engine(holdings: pd.DataFrame, price_idx: dict,
             if r400_chg < cfg.min_r400_chg: continue
             if sync < cfg.min_sync: continue
             if h_chg > cfg.max_holder_chg: continue
+
             if code not in price_idx: continue
 
             parr = price_idx[code]
@@ -216,18 +218,19 @@ def scan_main_engine(holdings: pd.DataFrame, price_idx: dict,
             if price < cfg.min_price_main: continue
 
             # 買入：延遲2天 + 收盤+3%限價 + 5天窗口
+            # 看 Day N 收盤 ≤ 限價 → Day N+1 開盤掛單，以 Day N 收盤成交
             after = parr[parr[:, 0] > dates[i]]
-            if len(after) < 3: continue
+            if len(after) < 4: continue
             limit = price * 1.03
-            window = after[2:7]
             bought = False
-            for k in range(len(window)):
-                if float(window[k, 1]) <= limit:
+            for k in range(2, min(7, len(after) - 1)):
+                day_close = float(after[k, 1])
+                if day_close <= limit:
                     signals.append(Signal(
                         code=code, engine='main',
                         signal_date=dates[i],
-                        buy_date=window[k, 0],
-                        buy_price=min(limit, float(window[k, 1])),
+                        buy_date=after[k + 1, 0],   # 隔天成交
+                        buy_price=day_close,          # 用前一天收盤當成交價
                         streak=streak, r400_chg=r400_chg,
                         sync=sync, holder_chg_pct=h_chg,
                     ))
@@ -369,7 +372,9 @@ def simulate_v7(main_signals: list[Signal],
 
         # 進場
         if date in sig_by_date:
-            week_key = date[:6]
+            d = datetime.date(int(date[:4]), int(date[4:6]), int(date[6:]))
+            iso = d.isocalendar()
+            week_key = f'{iso[0]}W{iso[1]:02d}'
             for sig in sig_by_date[date]:
                 if sig.code in held_codes: continue
                 if len(positions) >= cfg.max_positions: continue
