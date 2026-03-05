@@ -76,7 +76,7 @@ class V7Config:
         return self.sell_fee_rate + self.sell_tax_rate
 
 
-DB_PATH = Path(__file__).parent / 'data' / 'tdcc_holdings.db'
+DB_PATH = Path(__file__).parent.parent / 'data' / 'tdcc_holdings.db'
 CFG = V7Config()
 
 
@@ -555,7 +555,7 @@ def main():
         print_result(result, CFG)
 
         if cmd == 'report':
-            eq_path = Path(__file__).parent / 'data' / 'v7_equity_curve.csv'
+            eq_path = Path(__file__).parent.parent / 'data' / 'v7_equity_curve.csv'
             result.equity_curve.to_csv(eq_path, index=False)
             print(f"\n  淨值曲線匯出: {eq_path}")
 
@@ -567,7 +567,7 @@ def main():
                 'profit': round(t.profit, 0),
                 'days_held': t.days_held, 'exit_reason': t.exit_reason,
             } for t in result.trades]
-            tp = Path(__file__).parent / 'data' / 'v7_trades.json'
+            tp = Path(__file__).parent.parent / 'data' / 'v7_trades.json'
             with open(tp, 'w', encoding='utf-8') as f:
                 json.dump(trades_data, f, ensure_ascii=False, indent=2)
             print(f"  交易紀錄匯出: {tp}")

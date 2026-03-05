@@ -26,7 +26,7 @@ price_idx = build_price_index(prices)
 ma_idx    = build_ma_index(price_idx, 20)
 
 # ── 載入大盤資料 ──────────────────────────────────────────────
-taiex_df = pd.read_csv(Path(__file__).parent / 'data' / 'taiex.csv')
+taiex_df = pd.read_csv(Path(__file__).parent.parent / 'data' / 'taiex.csv')
 taiex_df['date'] = taiex_df['date'].astype(str).str.replace('-', '')
 taiex_df = taiex_df.sort_values('date').reset_index(drop=True)
 taiex_df['ma60'] = taiex_df['taiex'].rolling(60).mean()

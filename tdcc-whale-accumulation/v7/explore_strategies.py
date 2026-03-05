@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import sys
 
-DB_PATH = Path(__file__).parent / 'data' / 'tdcc_holdings.db'
+DB_PATH = Path(__file__).parent.parent / 'data' / 'tdcc_holdings.db'
 
 # ── 通用出場邏輯 ──────────────────────────────────────
 @dataclass

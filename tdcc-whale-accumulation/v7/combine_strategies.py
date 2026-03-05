@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from explore_strategies import backtest, Pos, Trd
 from strategy_v6d import load_data, prepare_data, scan_signals, StrategyConfig
 
-DB_PATH = Path(__file__).parent / 'data' / 'tdcc_holdings.db'
+DB_PATH = Path(__file__).parent.parent / 'data' / 'tdcc_holdings.db'
 
 # ── 載入資料 ─────────────────────────────────────────────────
 print("載入資料...")

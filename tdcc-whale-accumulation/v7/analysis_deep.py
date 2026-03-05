@@ -19,7 +19,7 @@ from strategy_v6d import (
     StrategyConfig, Signal, Position, Trade, PortfolioResult
 )
 
-DB_PATH = Path(__file__).parent / 'data' / 'tdcc_holdings.db'
+DB_PATH = Path(__file__).parent.parent / 'data' / 'tdcc_holdings.db'
 
 # ── 通用模擬核心（支援多種濾網和出場參數）────────────────
 def simulate(signals, price_idx, prices, cfg,
