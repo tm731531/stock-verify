@@ -140,7 +140,7 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
 
     sd = f"{signal_date[:4]}/{signal_date[4:6]}/{signal_date[6:]}"
 
-    # ── 主引擎 ──
+    # ── 主引擎有訊號 → 只發主引擎，補位不出現 ──
     if main_signals:
         lines += ['', f'🎯 主引擎 {len(main_signals)} 個（TDCC {sd}）',
                   '訊號日後跳過2天，第3天起觀察收盤≤限價，隔天掛單（最多等5天）', '']
@@ -151,14 +151,14 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
                 f"  大戶比例 {s['r400_now']}%｜散戶{s['holder_chg']:+.1f}%",
                 '',
             ]
-    else:
-        lines += ['', '🎯 主引擎：本週無訊號', '']
+        lines.append('🛑 停損＝限價×0.93｜停利：+15%啟動，回落10%出場｜最長90天')
+        return '\n'.join(lines)
 
-    # ── 補位引擎 ──
+    # ── 主引擎無訊號 → 補位引擎頂上 ──
     if backup_signals:
         top = backup_signals[:BACKUP_TOP_N]
-        lines += [f'📌 補位引擎 前{len(top)}（散戶出逃最多，共{len(backup_signals)}個）',
-                  f'TDCC日後第5個交易日收盤買入', '']
+        lines += ['', f'📌 補位引擎 前{len(top)}（散戶出逃最多，共{len(backup_signals)}個，TDCC {sd}）',
+                  'TDCC日後第5個交易日收盤買入', '']
         for s in top:
             lines += [
                 f"【{s['code']}】散戶跑{s['flee_pct']:+.1f}%｜持有人{s['holders_now']:,}",
@@ -166,7 +166,7 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
                 '',
             ]
     else:
-        lines += ['📌 補位引擎：本週無訊號', '']
+        lines += ['', '本週主引擎＋補位引擎均無訊號', '等下週 TDCC 更新']
 
     lines.append('🛑 停損＝限價×0.93｜停利：+15%啟動，回落10%出場｜最長90天')
     return '\n'.join(lines)
