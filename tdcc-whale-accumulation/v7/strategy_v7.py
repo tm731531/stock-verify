@@ -53,7 +53,6 @@ class V7Config:
     flee_min_pct: float = -5.0         # 持有人至少跌幾%
     min_price_backup: float = 50.0     # 最低股價
     backup_ma_period: int = 20         # 需站上幾日均線
-    backup_entry_delay: int = 5        # TDCC公布後幾個交易日買入
 
     # ── 出場（共用）──
     stop_loss_pct: float = -7.0
@@ -273,17 +272,14 @@ def scan_backup_engine(holdings: pd.DataFrame, price_idx: dict,
             if ma20 is not None:
                 if np.isnan(ma20[pi]) or cp < ma20[pi]: continue
 
-            # 買入：TDCC公布後 delay 個交易日
-            d = cfg.backup_entry_delay
-            if pi + d >= len(parr): continue
-            buy_date  = parr[pi + d, 0]
-            buy_price = float(parr[pi + d, 1])
+            # 買入：固定第5個交易日，以當天收盤成交；若資料不足則跳過
+            if pi + 5 >= len(parr): continue
+            buy_price = float(parr[pi + 5, 1])
             if buy_price <= 0: continue
-
             signals.append(Signal(
                 code=code, engine='backup',
                 signal_date=dates[i],
-                buy_date=buy_date,
+                buy_date=parr[pi + 5, 0],
                 buy_price=buy_price,
                 flee_pct=flee,
                 holders_now=h_now,

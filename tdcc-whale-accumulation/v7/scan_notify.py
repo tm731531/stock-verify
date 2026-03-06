@@ -1,9 +1,11 @@
 """
-TDCC 掃描＋通知器
+TDCC 掃描＋通知器 v2
 =================
 職責：
   - 每天確認資料是否最新，若舊了就先驅動抓取
-  - 掃描訊號並發 LINE 通知
+  - 掃描雙引擎訊號並發 LINE 通知
+  - 主引擎有訊號 → 發主引擎，補位不出現
+  - 主引擎無訊號 → 補位引擎頂上（前5名）
   - 這週已通知過 → 直接結束（睡覺）
 
 排程邏輯：
@@ -33,12 +35,20 @@ CONFIG_PATH  = BASE_DIR / 'scanner_config.json'
 STATE_PATH   = BASE_DIR / 'scanner_state.json'
 FETCH_SCRIPT = BASE_DIR / 'fetch_tdcc.py'
 
+# ── 主引擎參數 ──
 MIN_STREAK     = 3
 MIN_R400_CHG   = 3.0
 MIN_SYNC       = 0.5
 MAX_HOLDER_CHG = -2.0
 MIN_PRICE      = 300.0
 LIMIT_MULT     = 1.03
+
+# ── 補位引擎參數 ──
+FLEE_LOOKBACK_WEEKS = 4      # 回望幾週
+FLEE_MIN_PCT        = -5.0   # 持有人至少跌幾%
+MIN_PRICE_BACKUP    = 50.0   # 補位引擎最低股價
+BACKUP_MA_PERIOD    = 20     # 需站上幾日均線
+BACKUP_TOP_N        = 5      # LINE 通知最多顯示幾個補位訊號
 
 
 # ── 設定 / 狀態 ───────────────────────────────────────────────
@@ -105,7 +115,7 @@ def try_fetch() -> bool:
     return result.returncode == 0
 
 
-# ── 訊號掃描 ──────────────────────────────────────────────────
+# ── 共用工具 ──────────────────────────────────────────────────
 
 def iso_week_key(date_str: str) -> str:
     """'20260211' → '2026W07'，用來判斷同一週"""
@@ -123,63 +133,67 @@ def dedupe_by_week(grp: list) -> list:
     seen = {}
     for row in grp:
         wk = iso_week_key(row[1])
-        seen[wk] = row   # 同週後面的覆蓋前面的
-    return list(seen.values())  # dict 保持插入順序 (Python 3.7+)
+        seen[wk] = row
+    return list(seen.values())
 
 
-def current_price(conn, code: str) -> float:
-    """取該股票最新一日的收盤價（今天或最近交易日）"""
-    r = conn.execute(
-        'SELECT close_price FROM daily_prices WHERE stock_code=? ORDER BY date DESC LIMIT 1',
-        (code,)
-    ).fetchone()
-    return float(r[0]) if r else 0.0
+def load_stock_data(conn):
+    """回傳 {code: [row,...]}，已按 date 升序"""
+    rows = conn.execute(
+        'SELECT stock_code, date, ratio_400_above, ratio_1000_above, total_holders '
+        'FROM holdings ORDER BY stock_code, date'
+    ).fetchall()
+    stock_data = defaultdict(list)
+    for r in rows:
+        stock_data[r[0]].append(r)
+    return stock_data
 
 
-def scan_signals(conn) -> tuple[list[dict], str]:
+def load_price_data(conn):
+    """回傳 {code: {date: close_price}}"""
+    prices = defaultdict(dict)
+    for r in conn.execute('SELECT stock_code, date, close_price FROM daily_prices'):
+        prices[r[0]][r[1]] = float(r[2])
+    return prices
+
+
+def build_special_stocks(stock_data: dict) -> set:
+    """歷史上曾有單週 ratio_400_above 變動 >5% 的股票，永久排除（cummax）"""
+    special = set()
+    for code, grp in stock_data.items():
+        r400 = [x[2] for x in grp]
+        for k in range(1, len(r400)):
+            if abs(r400[k] - r400[k - 1]) > 5.0:
+                special.add(code)
+                break
+    return special
+
+
+# ── 主引擎掃描 ────────────────────────────────────────────────
+
+def scan_main_signals(conn) -> tuple[list[dict], str]:
     """
     掃描最新 TDCC 週的主引擎訊號。
-    - 同週重複資料自動去重（取最後一筆）
-    - 收盤價取最新交易日現價
+    條件：連升≥3週 + 大戶↑≥3% + 同步≥50% + 散戶↓≥2% + 股價≥300
     回傳 (signals, tdcc_date)
     """
     tdcc_date = conn.execute('SELECT MAX(date) FROM holdings').fetchone()[0] or ''
     if not tdcc_date:
         return [], ''
 
-    tdcc_week = iso_week_key(tdcc_date)
-
-    rows = conn.execute(
-        'SELECT stock_code, date, ratio_400_above, ratio_1000_above, total_holders '
-        'FROM holdings ORDER BY stock_code, date'
-    ).fetchall()
-
-    stock_data = defaultdict(list)
-    for r in rows:
-        stock_data[r[0]].append(r)
-
-    prices = defaultdict(dict)
-    for r in conn.execute('SELECT stock_code, date, close_price FROM daily_prices'):
-        prices[r[0]][r[1]] = r[2]
-
-    # 特殊事件標記：歷史上曾有單週 >5% 的股票永久排除（與回測一致）
-    special_stocks = set()
-    for code, grp in stock_data.items():
-        r400_all = [x[2] for x in grp]
-        for k in range(1, len(r400_all)):
-            if abs(r400_all[k] - r400_all[k-1]) > 5.0:
-                special_stocks.add(code)
-                break
+    tdcc_week  = iso_week_key(tdcc_date)
+    stock_data = load_stock_data(conn)
+    prices     = load_price_data(conn)
+    special    = build_special_stocks(stock_data)
 
     signals = []
     for code, grp in stock_data.items():
-        if code in special_stocks:
+        if code in special:
+            continue
+        if code.startswith('00'):
             continue
 
-        # 去重：同 ISO 週只保留最後一筆
         grp = dedupe_by_week(grp)
-
-        # 最後一筆必須是最新 TDCC 週
         if iso_week_key(grp[-1][1]) != tdcc_week:
             continue
         if len(grp) < 4:
@@ -192,9 +206,10 @@ def scan_signals(conn) -> tuple[list[dict], str]:
 
         streak = 0
         for j in range(i, 0, -1):
-            if r400[j] > r400[j-1]: streak += 1
+            if r400[j] > r400[j - 1]: streak += 1
             else: break
-        if streak < MIN_STREAK: continue
+        if streak < MIN_STREAK:
+            continue
 
         si        = i - streak
         r400_chg  = r400[i] - r400[si]
@@ -206,10 +221,10 @@ def scan_signals(conn) -> tuple[list[dict], str]:
         if sync      < MIN_SYNC:       continue
         if h_chg     > MAX_HOLDER_CHG: continue
 
-        # 用 TDCC 日當天收盤（限價計算的 anchor）
-        tdcc_day = grp[-1][1]   # 去重後最後一筆的實際日期
-        price = prices[code].get(tdcc_day, 0)
-        if price < MIN_PRICE: continue
+        tdcc_day = grp[-1][1]
+        price    = prices[code].get(tdcc_day, 0)
+        if price < MIN_PRICE:
+            continue
 
         limit_price = round(price * LIMIT_MULT, 1)
         signals.append({
@@ -225,8 +240,89 @@ def scan_signals(conn) -> tuple[list[dict], str]:
             'stop_loss':   round(limit_price * 0.93, 1),
         })
 
-    # 排序：連升週數少的優先（新鮮訊號），同週數再看 r400_chg 大的
+    # 連升週數少的優先（新鮮訊號），同週數再看 r400_chg 大的
     return sorted(signals, key=lambda x: (x['streak'], -x['r400_chg'])), tdcc_date
+
+
+# ── 補位引擎掃描 ──────────────────────────────────────────────
+
+def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
+    """
+    補位引擎：散戶出逃 + 站上 MA20
+    條件：4週持有人↓≥5% + 股價站上MA20 + 股價≥50
+    進場：TDCC日後第5個交易日（通知只給參考，不查未來價格）
+    只掃最新 TDCC 週的訊號
+    """
+    if not tdcc_date:
+        return []
+
+    tdcc_week  = iso_week_key(tdcc_date)
+    stock_data = load_stock_data(conn)
+
+    # 每日收盤價（用於 MA20 計算）
+    price_rows = conn.execute(
+        'SELECT stock_code, date, close_price FROM daily_prices ORDER BY stock_code, date'
+    ).fetchall()
+    price_data = defaultdict(list)
+    for r in price_rows:
+        price_data[r[0]].append((r[1], float(r[2])))
+
+    signals = []
+    for code, grp in stock_data.items():
+        if code.startswith('00'):
+            continue
+
+        grp = dedupe_by_week(grp)
+        if len(grp) < FLEE_LOOKBACK_WEEKS + 1:
+            continue
+        if iso_week_key(grp[-1][1]) != tdcc_week:
+            continue
+
+        holders = [x[4] for x in grp]   # index 4 = total_holders
+        i       = len(grp) - 1
+        h_now   = holders[i]
+        h_bef   = holders[i - FLEE_LOOKBACK_WEEKS]
+        if h_bef <= 0:
+            continue
+        flee = (h_now - h_bef) / h_bef * 100
+        if flee > FLEE_MIN_PCT:
+            continue
+
+        pdates = price_data.get(code, [])
+        if not pdates:
+            continue
+        date_list  = [p[0] for p in pdates]
+        close_list = [p[1] for p in pdates]
+
+        tdcc_day = grp[-1][1]
+        try:
+            pi = next(k for k, d in enumerate(date_list) if d >= tdcc_day)
+        except StopIteration:
+            continue
+
+        cp = close_list[pi]
+        if cp < MIN_PRICE_BACKUP:
+            continue
+
+        # 站上 MA20（用 TDCC 日前20筆計算，不含當天）
+        if pi < BACKUP_MA_PERIOD:
+            continue
+        ma20 = sum(close_list[pi - BACKUP_MA_PERIOD:pi]) / BACKUP_MA_PERIOD
+        if cp < ma20:
+            continue
+
+        # ⚠️ scan_notify 不查未來價格，只用 TDCC 當天收盤做參考
+        # 實際買入：TDCC 公布後第5個交易日，自行掛單
+        signals.append({
+            'signal_date': tdcc_date,
+            'code':        code,
+            'flee_pct':    round(flee, 1),
+            'holders_now': h_now,
+            'tdcc_close':  round(cp, 1),
+        })
+
+    # 散戶跑幅最大的優先（負值愈小愈大幅出逃）
+    return sorted(signals, key=lambda x: x['flee_pct'])
 
 
 # ── LINE ──────────────────────────────────────────────────────
@@ -253,26 +349,41 @@ def send_line(token: str, user_id: str, msg: str, dry: bool) -> bool:
         return False
 
 
-def build_message(signals: list[dict], db_date: str, signal_date: str) -> str:
+def build_message(main_signals: list[dict], backup_signals: list[dict],
+                  db_date: str, signal_date: str) -> str:
     today  = date.today().strftime('%m/%d')
     db_str = f"{db_date[:4]}/{db_date[4:6]}/{db_date[6:]}"
     lines  = [f'\n🐋 TDCC 鯨魚掃描｜{today}', f'最新資料：{db_str}']
 
-    if not signals:
-        lines += ['', '本週無主引擎訊號', '等下週 TDCC 更新']
+    sd = f"{signal_date[:4]}/{signal_date[4:6]}/{signal_date[6:]}" if signal_date else ''
+
+    # ── 主引擎有訊號 → 只發主引擎，補位不出現 ──
+    if main_signals:
+        lines += ['', f'🎯 主引擎 {len(main_signals)} 個（TDCC {sd}）',
+                  '訊號日後跳過2天，第3天起觀察收盤≤限價，隔天掛單（最多等5天）', '']
+        for s in main_signals:
+            lines += [
+                f"【{s['code']}】連升{s['streak']}週｜大戶+{s['r400_chg']}%｜同步{s['sync']}%",
+                f"  收盤 {s['price']:.0f} → 限價 ≤ {s['limit_price']:.1f} → 停損 ≤ {s['stop_loss']:.1f}",
+                f"  大戶比例 {s['r400_now']}%｜散戶{s['holder_chg']:+.1f}%",
+                '',
+            ]
+        lines.append('🛑 停損＝限價×0.93｜停利：+15%啟動，回落10%出場｜最長90天')
         return '\n'.join(lines)
 
-    sd = f"{signal_date[:4]}/{signal_date[4:6]}/{signal_date[6:]}"
-    lines += ['', f'📢 {len(signals)} 個訊號（TDCC {sd}）',
-              '訊號日後跳過2天，第3天起掛限價單（最多等5天）', '']
-
-    for s in signals:
-        lines += [
-            f"【{s['code']}】連升{s['streak']}週｜大戶+{s['r400_chg']}%｜同步{s['sync']}%",
-            f"  收盤 {s['price']:.0f} → 限價 ≤ {s['limit_price']:.1f} → 停損 ≤ {s['stop_loss']:.1f}",
-            f"  大戶比例 {s['r400_now']}%｜散戶{s['holder_chg']:+.1f}%",
-            '',
-        ]
+    # ── 主引擎無訊號 → 補位引擎頂上 ──
+    if backup_signals:
+        top = backup_signals[:BACKUP_TOP_N]
+        lines += ['', f'📌 補位引擎 前{len(top)}（散戶出逃最多，共{len(backup_signals)}個，TDCC {sd}）',
+                  'TDCC日後第5個交易日收盤買入', '']
+        for s in top:
+            lines += [
+                f"【{s['code']}】散戶跑{s['flee_pct']:+.1f}%｜持有人{s['holders_now']:,}",
+                f"  TDCC收盤 {s['tdcc_close']:.1f}｜TDCC後第5個交易日買入",
+                '',
+            ]
+    else:
+        lines += ['', '本週主引擎＋補位引擎均無訊號', '等下週 TDCC 更新']
 
     lines.append('🛑 停損＝限價×0.93｜停利：+15%啟動，回落10%出場｜最長90天')
     return '\n'.join(lines)
@@ -293,16 +404,15 @@ def main():
     print(f'[scan] {date.today()} 啟動')
 
     # ── 1. 已通知過這週？→ 睡覺 ────────────────────────────
-    conn        = sqlite3.connect(DB_PATH)
-    db_date     = db_latest_date(conn)
+    conn    = sqlite3.connect(DB_PATH)
+    db_date = db_latest_date(conn)
     conn.close()
 
     if not force:
-        # 掃一次看目前的 signal_date 是什麼
         conn = sqlite3.connect(DB_PATH)
-        _, current_signal_date = scan_signals(conn)
+        _, current_signal_date = scan_main_signals(conn)
         conn.close()
-
+        # 通知去重以主引擎 signal_date 為準
         if current_signal_date and state.get('notified_signal_date') == current_signal_date:
             print(f'[scan] 訊號日 {current_signal_date} 已通知過，睡覺 💤')
             return
@@ -313,12 +423,10 @@ def main():
     print(f'[scan] Norway 最新: {nw_date}')
 
     if nw_date and nw_date > db_date:
-        # 有新資料 → 先抓
         fetched = try_fetch()
         if not fetched:
             print('[scan] 抓取失敗，本次放棄，明天再試')
             return
-        # 更新 db_date
         conn    = sqlite3.connect(DB_PATH)
         db_date = db_latest_date(conn)
         conn.close()
@@ -327,18 +435,19 @@ def main():
     elif not nw_date:
         print('[scan] ⚠️ 無法連到 Norway，用現有資料繼續')
 
-    # ── 3. 掃描訊號 ─────────────────────────────────────
+    # ── 3. 掃描雙引擎訊號 ───────────────────────────────
     conn = sqlite3.connect(DB_PATH)
-    signals, signal_date = scan_signals(conn)
+    main_signals, signal_date = scan_main_signals(conn)
+    backup_signals = scan_backup_signals(conn, signal_date) if signal_date else []
     conn.close()
-    print(f'[scan] 訊號日: {signal_date}｜訊號數: {len(signals)}')
+    print(f'[scan] 訊號日: {signal_date}｜主引擎: {len(main_signals)}｜補位: {len(backup_signals)}')
 
     # ── 4. 發 LINE ──────────────────────────────────────
-    msg  = build_message(signals, db_date, signal_date)
+    msg  = build_message(main_signals, backup_signals, db_date, signal_date)
     print(msg)
     sent = send_line(token, user_id, msg, dry)
 
-    # ── 5. 記住已通知 ────────────────────────────────────
+    # ── 5. 記住已通知（以主引擎 signal_date 為準）──────
     if sent and not dry and signal_date:
         state['notified_signal_date'] = signal_date
         save_state(state)
