@@ -278,7 +278,7 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
         if iso_week_key(grp[-1][1]) != tdcc_week:
             continue
 
-        holders = [x[2] for x in grp]
+        holders = [x[4] for x in grp]   # index 4 = total_holders
         i       = len(grp) - 1
         h_now   = holders[i]
         h_bef   = holders[i - FLEE_LOOKBACK_WEEKS]
