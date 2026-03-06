@@ -21,19 +21,23 @@ TDCC 掃描＋通知器 v2
 """
 
 import json
-import sqlite3
 import subprocess
 import sys
 import requests
+import psycopg2
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
 BASE_DIR     = Path(__file__).parent
-DB_PATH      = BASE_DIR.parent / 'data' / 'tdcc_holdings.db'
 CONFIG_PATH  = BASE_DIR / 'scanner_config.json'
 STATE_PATH   = BASE_DIR / 'scanner_state.json'
 FETCH_SCRIPT = BASE_DIR / 'fetch_tdcc.py'
+
+PG_CONFIG = dict(
+    host='localhost', port=5432, dbname='tdcc',
+    user='tdcc', password='tdcc1234',
+)
 
 # ── 主引擎參數 ──
 MIN_STREAK     = 3
@@ -76,32 +80,68 @@ def save_state(s: dict):
 
 # ── 資料層 ────────────────────────────────────────────────────
 
+class _PGConn:
+    """讓 psycopg2 連線支援 conn.execute() 語法（與 sqlite3 相容）"""
+    def __init__(self):
+        self._conn = psycopg2.connect(**PG_CONFIG)
+        self._cur  = self._conn.cursor()
+    def execute(self, sql, params=None):
+        self._cur.execute(sql, params)
+        return self._cur
+    def commit(self):   self._conn.commit()
+    def close(self):    self._conn.close()
+    def __iter__(self): return iter(self._cur)
+
+
+def get_conn() -> _PGConn:
+    return _PGConn()
+
+
 def db_latest_date(conn) -> str:
     r = conn.execute('SELECT MAX(date) FROM holdings').fetchone()
     return r[0] or ''
 
 
-def norway_latest_date(sample='3443') -> str:
-    """探測 Norway 最新日期"""
+def tdcc_latest_date() -> str:
+    """探測最新 TDCC 日期（官方優先，Norway 後備）"""
+    # 1. 官方 TDCC Open Data
+    try:
+        r = requests.get(
+            'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5',
+            headers={'User-Agent': 'Mozilla/5.0'},
+            timeout=30,
+            allow_redirects=True,
+        )
+        r.raise_for_status()
+        r.encoding = 'utf-8-sig'
+        for line in r.text.splitlines():
+            parts = line.split(',')
+            if len(parts) >= 2 and parts[0].strip().isdigit() and len(parts[0].strip()) == 8:
+                print('[scan] 官方 TDCC 日期偵測成功')
+                return parts[0].strip()
+    except Exception as e:
+        print(f'[scan] 官方 TDCC 偵測失敗: {e}')
+
+    # 2. Norway 後備
     from bs4 import BeautifulSoup
     try:
         r = requests.get(
-            f'https://norway.twsthr.info/StockHolders.aspx?stock={sample}',
+            'https://norway.twsthr.info/StockHolders.aspx?stock=3443',
             headers={'User-Agent': 'Mozilla/5.0'},
             timeout=20,
         )
         soup = BeautifulSoup(r.text, 'html.parser')
         table = soup.find('table', {'id': 'Details'})
-        if not table:
-            return ''
-        for row in table.find_all('tr')[1:]:
-            cols = [c.get_text(strip=True) for c in row.find_all('td')]
-            if len(cols) > 2:
-                d = cols[2].replace('/', '').replace('-', '')
-                if d.isdigit() and len(d) == 8:
-                    return d
+        if table:
+            for row in table.find_all('tr')[1:]:
+                cols = [c.get_text(strip=True) for c in row.find_all('td')]
+                if len(cols) > 2:
+                    d = cols[2].replace('/', '').replace('-', '')
+                    if d.isdigit() and len(d) == 8:
+                        print('[scan] Norway 後備日期偵測成功')
+                        return d
     except Exception as e:
-        print(f'[scan] 探測 Norway 失敗: {e}')
+        print(f'[scan] Norway 偵測失敗: {e}')
     return ''
 
 
@@ -404,12 +444,12 @@ def main():
     print(f'[scan] {date.today()} 啟動')
 
     # ── 1. 已通知過這週？→ 睡覺 ────────────────────────────
-    conn    = sqlite3.connect(DB_PATH)
+    conn    = get_conn()
     db_date = db_latest_date(conn)
     conn.close()
 
     if not force:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_conn()
         _, current_signal_date = scan_main_signals(conn)
         conn.close()
         # 通知去重以主引擎 signal_date 為準
@@ -419,24 +459,27 @@ def main():
 
     # ── 2. 資料是否最新？──────────────────────────────────
     print(f'[scan] DB 最新: {db_date}')
-    nw_date = norway_latest_date()
-    print(f'[scan] Norway 最新: {nw_date}')
+    tdcc_date = tdcc_latest_date()
+    print(f'[scan] TDCC 最新: {tdcc_date}')
 
-    if nw_date and nw_date > db_date:
+    if tdcc_date and tdcc_date > db_date:
         fetched = try_fetch()
         if not fetched:
             print('[scan] 抓取失敗，本次放棄，明天再試')
+            send_line(token, user_id,
+                f'⚠️ TDCC 抓取失敗\nDB: {db_date}｜TDCC: {tdcc_date}\n請手動檢查 fetch_tdcc.py',
+                dry)
             return
-        conn    = sqlite3.connect(DB_PATH)
+        conn    = get_conn()
         db_date = db_latest_date(conn)
         conn.close()
         print(f'[scan] 更新後 DB 最新: {db_date}')
 
-    elif not nw_date:
-        print('[scan] ⚠️ 無法連到 Norway，用現有資料繼續')
+    elif not tdcc_date:
+        print('[scan] ⚠️ 無法連到 TDCC，用現有資料繼續')
 
     # ── 3. 掃描雙引擎訊號 ───────────────────────────────
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_conn()
     main_signals, signal_date = scan_main_signals(conn)
     backup_signals = scan_backup_signals(conn, signal_date) if signal_date else []
     conn.close()

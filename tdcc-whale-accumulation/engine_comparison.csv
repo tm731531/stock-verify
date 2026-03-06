@@ -1,0 +1,4 @@
+Engine,Signals Generated,Trades Executed,Win Rate %,Avg Return %,Median Return %,Best Trade %,Worst Trade %,Total PnL TWD,Profit Factor,Capital Allocation %
+Main,1250,1151,39.9,1.85,-2.0,180.35,-7.44,739847,1.74,50
+Backup,452,381,45.1,5.14,-0.68,204.88,-7.44,1049406,2.49,50
+Combined,1702,1532,41.2,2.67,-1.74,204.88,-7.44,1789253,2.05,100

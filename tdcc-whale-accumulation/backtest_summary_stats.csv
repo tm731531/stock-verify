@@ -1,0 +1,25 @@
+Metric,Value
+Initial Capital,"500,000"
+Final Equity,"2,289,253"
+Total Profit,"1,789,253"
+Total Return %,+357.85%
+Total Trades,"1,532"
+Win Rate %,41.2%
+Winners,631
+Losers,901
+Profit Factor,2.05x
+Avg Return per Trade %,+2.67%
+Median Return per Trade %,-1.74%
+Avg Winner %,+14.29%
+Avg Loser %,-5.47%
+Best Trade %,+204.88%
+Worst Trade %,-7.44%
+Std Dev %,18.80%
+Main Engine Trades,"1,151"
+Main Engine Win Rate %,39.9%
+Main Engine Avg Return %,+1.85%
+Main Engine Total PnL,"+739,847"
+Backup Engine Trades,381
+Backup Engine Win Rate %,45.1%
+Backup Engine Avg Return %,+5.14%
+Backup Engine Total PnL,"+1,049,406"

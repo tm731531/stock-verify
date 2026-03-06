@@ -1,0 +1,62 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║                  給第二台機器的快速開始指南                            ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+🎯 目標: 30 分鐘內在第二台機器上部署 006208 SMA20/50 日線交易系統
+
+═══════════════════════════════════════════════════════════════════════
+
+【Step 1】Clone 代碼到第二台機器
+
+  git clone https://github.com/tm731531/stock-verify.git
+  cd stock-verify/006208-sma-market-regime
+
+【Step 2】閱讀快速清單（重要！）
+
+  cat TODO_FOR_OTHER_MACHINE.md
+
+  ⚡ 這份文件告訴你要完成什麼，按步驟做就行
+
+【Step 3】安裝依賴
+
+  pip3 install pandas numpy shioaji
+
+【Step 4】配置 API 認證（3個信息要填）
+
+  nano sma_006208_daily_bot/configs/global.json
+  
+  填入:
+  - "api_key": "你的永豐金 API_KEY"
+  - "secret_key": "你的永豐金 SECRET_KEY"  
+  - "person_id": "你的身分證字號"
+
+【Step 5】測試連線
+
+  cd sma_006208_daily_bot
+  python3 main.py --status
+
+【Step 6】設置定時執行
+
+  cd ../scripts
+  bash setup_crontab.sh
+
+【Step 7】驗證
+
+  crontab -l
+  # 應該看到: 30 12 * * 1-5 /path/to/run_daily_bot.sh
+
+═══════════════════════════════════════════════════════════════════════
+
+📚 如需詳細說明，查閱以下文件：
+
+  • IMPLEMENTATION_GUIDE.md       - 完整系統說明
+  • DEPLOYMENT_WITH_SHIOAJI.md    - API 詳細配置
+  • TODO_FOR_OTHER_MACHINE.md     - 逐步清單（推薦）
+
+═══════════════════════════════════════════════════════════════════════
+
+✅ 完成！系統會每日 12:30 自動執行
+
+  監看日誌: tail -f logs/crontab_*.log
+
+═══════════════════════════════════════════════════════════════════════
