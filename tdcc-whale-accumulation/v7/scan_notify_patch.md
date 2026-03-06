@@ -16,7 +16,6 @@ FLEE_LOOKBACK_WEEKS = 4      # 回望幾週
 FLEE_MIN_PCT        = -5.0   # 持有人至少跌幾%
 MIN_PRICE_BACKUP    = 50.0   # 補位引擎最低股價
 BACKUP_MA_PERIOD    = 20     # 需站上幾日均線
-BACKUP_ENTRY_DAYS   = 5      # TDCC 公布後第幾個交易日買入
 BACKUP_TOP_N        = 5      # LINE 通知最多顯示幾個補位訊號
 ```
 
@@ -103,22 +102,14 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
         else:
             continue  # 資料不夠算 MA20
 
-        # 買入：第5個交易日收盤
-        if pi + BACKUP_ENTRY_DAYS >= len(date_list):
-            continue
-        buy_date  = date_list[pi + BACKUP_ENTRY_DAYS]
-        buy_price = close_list[pi + BACKUP_ENTRY_DAYS]
-        if buy_price <= 0:
-            continue
-
+        # ⚠️ scan_notify 不查未來價格，只用 TDCC 當天收盤做參考
+        # 實際買入：TDCC 公布後第5個交易日，以市價或自行掛單
         signals.append({
             'signal_date': tdcc_date,
             'code':        code,
             'flee_pct':    round(flee, 1),
             'holders_now': h_now,
-            'tdcc_close':  round(cp, 1),
-            'buy_date':    buy_date,
-            'buy_price':   round(buy_price, 1),
+            'tdcc_close':  round(cp, 1),   # TDCC 當天收盤，僅供參考
         })
 
     # 散戶跑幅最大的優先（負值愈小愈跑）
@@ -162,7 +153,7 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
         for s in top:
             lines += [
                 f"【{s['code']}】散戶跑{s['flee_pct']:+.1f}%｜持有人{s['holders_now']:,}",
-                f"  參考買入 {s['buy_price']:.1f}（{s['buy_date']}收盤）",
+                f"  TDCC收盤 {s['tdcc_close']:.1f}｜TDCC後第5個交易日買入",
                 '',
             ]
     else:
