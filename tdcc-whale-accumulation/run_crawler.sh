@@ -31,8 +31,15 @@ if [ $RESULT -eq 0 ]; then
     echo "[$(date)] 開始重跑 v7 SCAN 版本..." | tee -a "$LOG_FILE"
 
     if [ -f "v7/fetch_tdcc.py" ]; then
-        python3 v7/fetch_tdcc.py >> "$LOG_FILE" 2>&1
-        echo "[$(date)] ✓ v7 SCAN 版本執行完成" | tee -a "$LOG_FILE"
+        echo "[$(date)] ① 抓取 TDCC 資料..." | tee -a "$LOG_FILE"
+        python3 v7/fetch_tdcc.py --force >> "$LOG_FILE" 2>&1
+        echo "[$(date)] ✓ TDCC 資料抓取完成" | tee -a "$LOG_FILE"
+    fi
+
+    if [ -f "v7/scan_notify.py" ]; then
+        echo "[$(date)] ② 掃描股票信號（算股號）..." | tee -a "$LOG_FILE"
+        python3 v7/scan_notify.py >> "$LOG_FILE" 2>&1
+        echo "[$(date)] ✓ 信號掃描完成" | tee -a "$LOG_FILE"
     fi
 else
     echo "[$(date)] ✗ 爬蟲執行失敗（代碼 $RESULT）" | tee -a "$LOG_FILE"

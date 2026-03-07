@@ -51,20 +51,34 @@ else:
 conn.close()
 PYTHON_EOF
 
-# 運行 v7 SCAN 版本
+# 運行 v7 SCAN 版本（1. 抓 TDCC 資料）
 echo "[$(date)] 開始運行 v7 SCAN 版本..." | tee -a "$PROJECT_DIR/logs/monitor.log"
 
 cd "$PROJECT_DIR" || exit 1
 
 if [ -f "v7/fetch_tdcc.py" ]; then
-    python3 v7/fetch_tdcc.py --force >> "$PROJECT_DIR/logs/v7_scan.log" 2>&1
+    echo "[$(date)] ① 抓取 TDCC 資料..." | tee -a "$PROJECT_DIR/logs/monitor.log"
+    python3 v7/fetch_tdcc.py --force >> "$PROJECT_DIR/logs/v7_fetch_tdcc.log" 2>&1
     RESULT=$?
 
     if [ $RESULT -eq 0 ] || [ $RESULT -eq 1 ]; then
-        echo "[$(date)] ✓ v7 SCAN 版本執行完成 (代碼 $RESULT)" | tee -a "$PROJECT_DIR/logs/monitor.log"
+        echo "[$(date)] ✓ TDCC 資料抓取完成 (代碼 $RESULT)" | tee -a "$PROJECT_DIR/logs/monitor.log"
     else
-        echo "[$(date)] ✗ v7 SCAN 版本執行失敗 (代碼 $RESULT)" | tee -a "$PROJECT_DIR/logs/monitor.log"
+        echo "[$(date)] ✗ TDCC 資料抓取失敗 (代碼 $RESULT)" | tee -a "$PROJECT_DIR/logs/monitor.log"
         exit 1
+    fi
+fi
+
+# 運行信號掃描（2. 算股號、識別信號）
+if [ -f "v7/scan_notify.py" ]; then
+    echo "[$(date)] ② 掃描股票信號..." | tee -a "$PROJECT_DIR/logs/monitor.log"
+    python3 v7/scan_notify.py >> "$PROJECT_DIR/logs/v7_scan_signals.log" 2>&1
+    RESULT=$?
+
+    if [ $RESULT -eq 0 ]; then
+        echo "[$(date)] ✓ 信號掃描完成" | tee -a "$PROJECT_DIR/logs/monitor.log"
+    else
+        echo "[$(date)] ⚠️  信號掃描完成 (代碼 $RESULT)" | tee -a "$PROJECT_DIR/logs/monitor.log"
     fi
 fi
 
