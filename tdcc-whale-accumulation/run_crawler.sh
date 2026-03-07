@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # TDCC 爬蟲自動化運行腳本
-# 用途：每週五下午自動更新 TDCC 大戶持股數據
+# 用途：
+#   - 週六 16:00：v7/fetch_tdcc.py 爬取最新 TDCC 資料
+#   - 週日 09:00：v7/scan_notify.py 掃描信號（算股號）
+# 備註：此腳本也可手動執行進行臨時更新
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
