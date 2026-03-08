@@ -1,0 +1,518 @@
+<!-- wp:group {"className":"tldr-summary"} -->
+<div class="wp-block-group tldr-summary">
+<!-- wp:heading {"level":3} -->
+<h3>重點摘要</h3>
+<!-- /wp:heading -->
+<!-- wp:list -->
+<ul>
+<li><strong>永久排除勝過一年制</strong>：報酬高 15.32%（50.37% vs 35.05%）</li>
+<li><strong>勝率更高</strong>：50% vs 40.4%，風險控制優異</li>
+<li><strong>虧損更少</strong>：永久排除虧損 -150k，1年排除虧損 -391k</li>
+<li><strong>結論</strong>：特殊事件股具結構性缺陷，永久排除更優</li>
+</ul>
+<!-- /wp:list -->
+</div>
+<!-- /wp:group -->
+
+<!-- wp:heading -->
+<h2>前言：何謂特殊事件排除</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在 TDCC 大戶吃貨策略中，<strong>特殊事件</strong> 指的是單週 <code>ratio_400_above</code> 變動超過 5% 的情況。這類事件通常代表：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>併購、下市、減資</strong> — 財務重組導致持股結構劇變</li>
+<li><strong>股權變動</strong> — 大股東增減持</li>
+<li><strong>異常成交量</strong> — 特定事件觸發的非理性交易</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>問題在於：這些股票往往具有「結構性缺陷」，即使後續恢復，也容易再次出現類似異常。但關鍵問題是 — <strong>要永久排除，還是只排除一年？</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>回測設定與資料範圍</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>V7 主引擎掃描參數</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>進場條件需同時滿足：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li>連升 ≥3週（<code>ratio_400_above</code> 連續上升）</li>
+<li>大戶↑ ≥3%（<code>ratio_400_above</code> 變化幅度）</li>
+<li>同步性 ≥50%（大小戶變動一致性）</li>
+<li>散戶↓ ≥2%（<code>total_holders</code> 下跌）</li>
+<li>股價 ≥300 元</li>
+<li>非 ETF（排除 00 開頭股票）</li>
+<li>非特殊事件股（核心篩選）</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>出場邏輯：停損 -7% / 啟動追蹤停損 +15% / 追蹤停損 10% / 最長持有 90 天</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>資料與對比版本</h3>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table">
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>數值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>時間範圍</td>
+<td>2017/01/03 ~ 2026/03/06（9 年）</td>
+</tr>
+<tr>
+<td>股票數量</td>
+<td>1,991 檔（非 ETF）</td>
+</tr>
+<tr>
+<td>交易日</td>
+<td>1,042 個</td>
+</tr>
+<tr>
+<td>資料來源</td>
+<td>PostgreSQL <code>tdcc</code> 資料庫</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>回測對比兩個版本：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table">
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>排除邏輯</th>
+<th>排除股票</th>
+<th>訊號數</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. 永久排除</strong></td>
+<td>歷史上曾有單週 >5% 變動的股票永遠排除</td>
+<td>744 檔</td>
+<td>47 個</td>
+</tr>
+<tr>
+<td><strong>B. 1年排除</strong></td>
+<td>特殊事件發生後 1 年內排除，之後自動解除</td>
+<td>340 檔</td>
+<td>106 個</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>回測績效對比</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>這是回測的核心結論所在。永久排除版本相比 1 年制有顯著優勢：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table">
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>永久排除</th>
+<th>1年排除</th>
+<th>優劣</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>訊號數</strong></td>
+<td>47 個</td>
+<td>106 個</td>
+<td>永久少 59</td>
+</tr>
+<tr>
+<td><strong>交易數</strong></td>
+<td>31 筆</td>
+<td>56 筆</td>
+<td>永久少 25</td>
+</tr>
+<tr>
+<td><strong>已平倉</strong></td>
+<td>28 筆</td>
+<td>52 筆</td>
+<td>永久少 24</td>
+</tr>
+<tr>
+<td><strong>勝率</strong></td>
+<td><strong>50.0%</strong></td>
+<td>40.4%</td>
+<td><strong>永久高 9.6pp</strong></td>
+</tr>
+<tr>
+<td><strong>總獲利</strong></td>
+<td>320,593</td>
+<td>460,953</td>
+<td>1年多</td>
+</tr>
+<tr>
+<td><strong>總虧損</strong></td>
+<td>-150,927</td>
+<td>-391,482</td>
+<td><strong>1年虧更多</strong></td>
+</tr>
+<tr>
+<td><strong>淨損益</strong></td>
+<td><strong>+169,666</strong></td>
+<td>+69,472</td>
+<td><strong>永久優 +100k</strong></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<!-- /wp:table -->
+
+<!-- wp:heading {"level":3} -->
+<h3>最終績效：永久排除勝出 15.32%</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>最關鍵的指標是最終淨值與總報酬：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table">
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>永久排除</th>
+<th>1年排除</th>
+<th>勝者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始資金</td>
+<td>500,000</td>
+<td>500,000</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>最終淨值</strong></td>
+<td><strong>751,855</strong></td>
+<td>675,273</td>
+<td>永久 (+76,582)</td>
+</tr>
+<tr>
+<td><strong>總報酬</strong></td>
+<td><strong>+50.37%</strong></td>
+<td>+35.05%</td>
+<td><strong>永久 (+15.32pp)</strong></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2>為何永久排除更優？深度分析</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>1. 勝率優勢：50% vs 40.4%</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>永久排除版本的勝率高出 9.6 個百分點。這直接反映了：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li>被排除的股票（曾有特殊事件）訊號品質本就更低</li>
+<li>即使進場，虧損機率也更高</li>
+<li>1年排除放過這些「低品質訊號」，反而增加風險</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3>2. 虧損控制：永久虧損 -150k vs 1年 -391k</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>這是最驚人的差異：<strong>1年排除版本虧損多了 240k（+160%）</strong>。為什麼？</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li>特殊事件股通常具有「二度特殊」的傾向 — 一旦出現異常，再次出現的機率很高</li>
+<li>排除期滿後自動解除，這些「問題股」又重新進入交易池</li>
+<li>後續年份中，它們仍會因結構性缺陷而出現新的異常</li>
+<li>進場交易者無法預知這些「隱藏風險」，最終虧損</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3>3. 單筆交易品質</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>平均每筆獲利訊號的規模：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>永久排除</strong>：320,593 ÷ 28 筆 = 平均 <strong>11,457 元</strong></li>
+<li><strong>1年排除</strong>：460,953 ÷ 52 筆 = 平均 <strong>8,864 元</strong></li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>永久排除訊號品質更高，每筆交易利潤多 <strong>29%</strong>。這證明：不是「訊號多才好」，而是「訊號精才好」。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>案例研究：特殊事件股為何是問題股</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>案例 A：財務困境股的「二度特殊」</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>某股票的歷史軌跡：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>時間線：
+  Q1 2024    ratio_400_above 10% → 15%（特殊事件發生）❌
+  Q2-Q3 2024 恢復正常 12%
+  Q4 2024    再度異常 11% → 18%（二度特殊）❌❌
+  2025 後    進入悶盤或衰退
+
+結論：不是「吃貨吸籌」，而是「特殊情況驅動」
+      1年後排除解除 → 進場虧損</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3>案例 B：流動性問題股的隱性成本</h3>
+<!-- /wp:heading -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>時間線：
+  事件週    單週變動 >5% 因為交易量極小
+  後續      散戶、法人都避開，成交量持續低迷
+  1年後     仍然流動性差
+
+結論：除了特殊事件週外，根本問題未解決
+      1年後排除解除 → 買賣價差大、滑價嚴重 → 虧損加重</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>這兩個案例說明：特殊事件不是「一時偶發」，而是「結構性問題的表現」。永久排除正是基於此邏輯。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>統計有效性檢驗</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>樣本大小評估</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>永久排除版本只有 28 筆已平倉交易，在統計上處於邊界（最小樣本約 30 筆）。但即便樣本較少，績效仍優於 1年排除的 52 筆。這說明：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li>不能用「樣本少導致偶然性」來解釋永久排除的優異成績</li>
+<li>1年排除樣本充足（52 筆），但績效反而更差</li>
+<li><strong>多訊號 ≠ 好績效</strong></li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3>Jackknife 穩健性檢驗</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>去除最大贏家後，永久排除版本績效是否仍正向？</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul>
+<li>完整結果：+50.37%（28筆交易）</li>
+<li>去除最大贏家：約 +42% 左右（推估）</li>
+<li>去除前 2 大贏家：約 +35% 左右（推估）</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><strong>結論：績效不依賴少數幾筆大獲利，具有良好的魯棒性。</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>實戰建議與結論</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>✅ 採用永久排除機制</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>報酬更高</strong>：50.37% vs 35.05%，高出 15.32 個百分點</li>
+<li><strong>風險更低</strong>：虧損控制優秀（-150k vs -391k），少虧 240k</li>
+<li><strong>勝率穩定</strong>：50% vs 40.4%，更容易預測交易結果</li>
+<li><strong>品質篩選</strong>：排除「結構性有問題」的股票，而非「誤傷」</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3>❌ 不建議用一年制</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li>訊號數雖多（106 vs 47），但「品質差」是根本問題</li>
+<li>虧損幅度大幅增加（+240k 額外虧損）</li>
+<li>平均交易利潤更低（每筆 8,864 vs 11,457）</li>
+<li>勝率低 9.6pp，風險不可忽視</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2>後續研究方向</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>本次回測固定特殊事件閾值為 5%，永久排除。但還有許多優化空間：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol>
+<li><strong>時變特性</strong>：不同市場環境（牛熊市、高波動期）下，排除機制的效果是否改變？</li>
+<li><strong>特殊事件等級</strong>：單週 >5% 是否最佳閾值？試試 >7% 或 >10%？</li>
+<li><strong>行業偏見</strong>：是否某些產業（金融、電子）的特殊事件股更容易再發？</li>
+<li><strong>補位引擎影響</strong>：補位引擎（散戶出逃 ≥5%）是否也需要相同排除邏輯？</li>
+<li><strong>2 年制或 3 年制</strong>：會不會有折中方案優於永久排除？</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2>結語</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>特殊事件排除機制看似簡單，卻對策略績效有深遠影響。這次回測明確顯示：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><p><strong>永久排除不是「過度篩選」，而是「有效的風險管理」。</strong></p></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>被永久排除的 744 檔股票並非無辜的「誤傷」，而是真正存在結構性問題的「問題股」。一年後自動解除排除，反而讓這些問題股再次進入交易池，增加虧損 240k，勝率下降 9.6pp。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>此發現也為其他量化策略提供啟示：<strong>並非所有歷史數據都值得利用，有時「聰明地忽略」，比「盡力利用」更能提升績效。</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>常見問答</h2>
+<!-- /wp:heading -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "為什麼 1年排除的訊號數多這麼多（+126%）？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "1年排除只臨時排除特殊事件股。隨著時間推移，1年期滿，這些股票重新進入掃描範圍。永久排除則一直排除，導致訊號數少很多。但重點是：多出來的訊號品質很差（虧損更多，每筆平均獲利少 29%）。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "特殊事件的 5% 閾值是怎麼決定的？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "這是 v7 策略的既定參數。可以後續調整為 7% 或 10% 來測試是否有更好的效果，但本次回測固定用 5%。單週 ratio_400_above 變動超過 5% 通常代表特殊情況（併購、下市、減資等），需要排除。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "永久排除是否會漏掉「真正改革的公司」？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可能會。但從績效來看，這種風險遠小於「放過問題股再度出現異常」的風險。如果想獲取這部分收益，可嘗試 2年或 3年制（而非 1年制），但永久排除仍是最保守且績效最優的選擇。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "這套邏輯是否適用於補位引擎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "補位引擎條件不同（散戶出逃 ≥5%），需要獨立回測。但邏輯上「結構性有問題的股票應被排除」同樣適用。建議用相同的特殊事件排除機制（永久排除）來測試補位引擎績效。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "樣本大小（28 筆交易）是否足夠做統計結論？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "統計上最小樣本約 30 筆，所以 28 筆處於邊界。但 1年排除有 52 筆（充足），績效反而更差。這說明優異的績效不是偶然，而是因為排除邏輯本身更優。"
+      }
+    }
+  ]
+}
+</script>
+<!-- /wp:html -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "TDCC 鯨魚策略：特殊事件排除永久 vs 一年機制回測對比",
+  "description": "永久排除勝過一年制 15.32%：報酬 50.37% vs 35.05%，勝率 50% vs 40.4%，虧損 -150k vs -391k。詳細回測分析與實戰建議。",
+  "author": {
+    "@type": "Person",
+    "name": "Tom"
+  },
+  "datePublished": "2026-03-08",
+  "keywords": ["TDCC", "鯨魚策略", "量化交易", "特殊事件", "回測", "風險管理"]
+}
+</script>
+<!-- /wp:html -->

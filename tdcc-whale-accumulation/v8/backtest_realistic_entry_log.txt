@@ -1,0 +1,23 @@
+================================================================================
+回測：6週版本（實盤進場邏輯 - 限價單 + 5日期限）
+================================================================================
+✓ 加載 170 個日期，1991 支股票
+✓ 信號：1719 個
+✓ 計算進場窗口（週三開始，5 個交易日）
+
+================================================================================
+模擬交易（6週版本 + 實盤進場邏輯）
+================================================================================
+Traceback (most recent call last):
+  File "/home/tom/stock-verify/tdcc-whale-accumulation/v8/backtest_realistic_entry.py", line 203, in <module>
+    signal_price = get_price_at_date(stock, sig['signal_date'], is_open=False)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tom/stock-verify/tdcc-whale-accumulation/v8/backtest_realistic_entry.py", line 177, in get_price_at_date
+    cursor.execute("""
+  File "/home/tom/.local/lib/python3.12/site-packages/psycopg2/extras.py", line 236, in execute
+    return super().execute(query, vars)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedColumn: column "open_price" does not exist
+LINE 2:         SELECT open_price, close_price FROM daily_prices
+                       ^
+
