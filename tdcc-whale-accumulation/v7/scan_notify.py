@@ -48,8 +48,9 @@ MIN_PRICE      = 300.0
 LIMIT_MULT     = 1.03
 
 # ── 補位引擎參數 ──
-FLEE_LOOKBACK_WEEKS = 4      # 回望幾週
-FLEE_MIN_PCT        = -5.0   # 持有人至少跌幾%
+FLEE_LOOKBACK_WEEKS = 3      # 回望幾週（改為3週）
+FLEE_MIN_PCT        = -15.0  # 持有人至少跌幾%（改為15%）
+BACKUP_R400_CHG     = 2.0    # 大戶增加幾%（新增條件）
 MIN_PRICE_BACKUP    = 50.0   # 補位引擎最低股價
 BACKUP_MA_PERIOD    = 20     # 需站上幾日均線
 BACKUP_TOP_N        = 5      # LINE 通知最多顯示幾個補位訊號
@@ -288,8 +289,8 @@ def scan_main_signals(conn) -> tuple[list[dict], str]:
 
 def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
     """
-    補位引擎：散戶出逃 + 站上 MA20
-    條件：4週持有人↓≥5% + 股價站上MA20 + 股價≥50
+    補位引擎：散戶出逃 + 大戶進場 + 站上 MA20
+    條件：3週持有人↓≥15% + 大戶↑≥2% + 股價站上MA20 + 股價≥50
     進場：TDCC日後第5個交易日（通知只給參考，不查未來價格）
     只掃最新 TDCC 週的訊號
     """
@@ -319,6 +320,7 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
             continue
 
         holders = [x[4] for x in grp]   # index 4 = total_holders
+        r400    = [x[2] for x in grp]   # index 2 = ratio_400_above
         i       = len(grp) - 1
         h_now   = holders[i]
         h_bef   = holders[i - FLEE_LOOKBACK_WEEKS]
@@ -326,6 +328,13 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
             continue
         flee = (h_now - h_bef) / h_bef * 100
         if flee > FLEE_MIN_PCT:
+            continue
+
+        # 大戶增加≥2%
+        r400_now = float(r400[i] or 0)
+        r400_bef = float(r400[i - FLEE_LOOKBACK_WEEKS] or 0)
+        r400_chg = r400_now - r400_bef
+        if r400_chg < BACKUP_R400_CHG:
             continue
 
         pdates = price_data.get(code, [])
@@ -357,6 +366,7 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
             'signal_date': tdcc_date,
             'code':        code,
             'flee_pct':    round(flee, 1),
+            'r400_chg':    round(r400_chg, 2),
             'holders_now': h_now,
             'tdcc_close':  round(cp, 1),
         })
@@ -414,11 +424,11 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
     # ── 主引擎無訊號 → 補位引擎頂上 ──
     if backup_signals:
         top = backup_signals[:BACKUP_TOP_N]
-        lines += ['', f'📌 補位引擎 前{len(top)}（散戶出逃最多，共{len(backup_signals)}個，TDCC {sd}）',
+        lines += ['', f'📌 補位引擎 前{len(top)}（3週散戶↓≥15% + 大戶↑≥2%，共{len(backup_signals)}個，TDCC {sd}）',
                   'TDCC日後第5個交易日收盤買入', '']
         for s in top:
             lines += [
-                f"【{s['code']}】散戶跑{s['flee_pct']:+.1f}%｜持有人{s['holders_now']:,}",
+                f"【{s['code']}】散戶跑{s['flee_pct']:+.1f}%｜大戶+{s['r400_chg']:.1f}%｜持有人{s['holders_now']:,}",
                 f"  TDCC收盤 {s['tdcc_close']:.1f}｜TDCC後第5個交易日買入",
                 '',
             ]
