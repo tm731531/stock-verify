@@ -72,6 +72,12 @@ def report(fetcher):
 
 
 def main():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--force', action='store_true', help='重新爬取所有月份，覆蓋舊數據')
+    args = parser.parse_args()
+
     min_date, max_date, tdcc_stocks = get_tdcc_range()
     start_month = min_date[:6]  # YYYYMM
     end_month = max_date[:6]
@@ -79,6 +85,8 @@ def main():
     logger.info(f"TDCC 範圍: {min_date} ~ {max_date}")
     logger.info(f"月份範圍: {start_month} ~ {end_month}")
     logger.info(f"TDCC 股票數: {len(tdcc_stocks)}")
+    if args.force:
+        logger.info("⚠️  強制模式：將重新爬取所有月份，覆蓋現有數據（耗時較長）")
 
     fetcher = PriceFetcher(request_delay=1.0, db_path=DB_PATH)
 
@@ -107,7 +115,7 @@ def main():
     twse_in_tdcc = [s for s in twse_stocks if s in tdcc_set]
     logger.info(f"TWSE 上市: {len(twse_stocks)} | 在 TDCC 中: {len(twse_in_tdcc)}")
 
-    fetcher.sync_twse_stocks(twse_in_tdcc, start_month, end_month)
+    fetcher.sync_twse_stocks(twse_in_tdcc, start_month, end_month, force=args.force)
 
     # ── Report ──
     report(fetcher)

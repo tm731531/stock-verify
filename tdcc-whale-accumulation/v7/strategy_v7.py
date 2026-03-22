@@ -53,6 +53,7 @@ class V7Config:
     flee_min_pct: float = -5.0         # 持有人至少跌幾%
     min_price_backup: float = 50.0     # 最低股價
     backup_ma_period: int = 20         # 需站上幾日均線
+    backup_r400_chg: float = 0.0       # 大戶增加幾%（不檢查）
 
     # ── 出場（共用）──
     stop_loss_pct: float = -7.0

@@ -60,14 +60,24 @@ cursor.execute("""
 all_dates = [r['date'] for r in cursor.fetchall()]
 date_to_idx = {d: i for i, d in enumerate(all_dates)}
 
-# 價格
+# 價格（加載完整 OHLCV）
 cursor.execute("""
-    SELECT stock_code, date, close_price FROM daily_prices
+    SELECT stock_code, date, open_price, high_price, low_price, close_price FROM daily_prices
     WHERE date >= '20220101' AND date <= '20251231'
 """)
 prices = defaultdict(dict)
+ohlcv = defaultdict(lambda: defaultdict(dict))
 for r in cursor.fetchall():
-    prices[r['stock_code']][r['date']] = float(r['close_price'])
+    code = r['stock_code']
+    date = r['date']
+    close_price = float(r['close_price']) if r['close_price'] else None
+    prices[code][date] = close_price  # 保留舊格式以兼容進場邏輯
+    ohlcv[code][date] = {
+        'open': float(r['open_price']) if r['open_price'] else None,
+        'high': float(r['high_price']) if r['high_price'] else None,
+        'low': float(r['low_price']) if r['low_price'] else None,
+        'close': close_price,
+    }
 
 # TDCC 數據
 cursor.execute("""
@@ -176,8 +186,8 @@ def scan_all_signals():
 
             # 股價檢查
             sig_date = grp[i]['date']
-            sig_price = prices[code].get(sig_date, 0)
-            if sig_price < 50:
+            sig_price = prices[code].get(sig_date) or 0
+            if not sig_price or sig_price < 50:
                 continue
 
             # MA20 檢查
@@ -280,6 +290,7 @@ def run_backtest(main_sigs, backup_sigs, max_positions, max_hold_calendar_days):
             cal_days = (date_obj - entry_date_obj).days
 
             price = prices[code].get(date)
+            ohlcv_data = ohlcv[code].get(date, {})
 
             should_exit = False
             reason = ''
@@ -289,11 +300,11 @@ def run_backtest(main_sigs, backup_sigs, max_positions, max_hold_calendar_days):
             if price:
                 pnl_pct = (price - pos['entry_price']) / pos['entry_price'] * 100
 
-                # 停損
+                    # 停損（用收盤價）
                 if pnl_pct <= -7.0:
                     should_exit = True
                     reason = '停損'
-                # 停利邏輯
+                # 停利邏輯（用收盤價）
                 elif not pos['take_profit_activated'] and pnl_pct >= 15.0:
                     # 首次達到 +15%，啟動停利
                     pos['take_profit_activated'] = True

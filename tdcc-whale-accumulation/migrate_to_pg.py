@@ -81,7 +81,11 @@ def create_schema():
         CREATE TABLE IF NOT EXISTS daily_prices (
             stock_code  VARCHAR(10) NOT NULL,
             date        VARCHAR(8)  NOT NULL,
+            open_price  NUMERIC(12,2),
+            high_price  NUMERIC(12,2),
+            low_price   NUMERIC(12,2),
             close_price NUMERIC(12,2),
+            volume      BIGINT,
             PRIMARY KEY (stock_code, date)
         ) PARTITION BY RANGE (date)
     """)
@@ -154,16 +158,59 @@ def migrate_holdings(sqlite_conn, pg_conn):
     print(f'\n✅ holdings 遷移完成：{written:,} 筆')
 
 
-def migrate_daily_prices(sqlite_conn, pg_conn):
+def migrate_daily_prices(sqlite_conn, pg_conn, force=False):
     cur_s = sqlite_conn.cursor()
     cur_p = pg_conn.cursor()
 
     cur_p.execute('SELECT COUNT(*) FROM daily_prices')
     existing = cur_p.fetchone()[0]
-    if existing > 0:
+    if existing > 0 and not force:
         print(f'ℹ️  daily_prices 已有 {existing:,} 筆，略過（--force 可強制重寫）')
         return
 
+    # 強制模式：備份並重建表結構
+    if force and existing > 0:
+        print(f'🔄 強制模式：將備份 {existing:,} 筆舊資料並重建表...')
+        cur_p.execute('DROP TABLE IF EXISTS daily_prices_backup')
+        cur_p.execute('CREATE TABLE daily_prices_backup AS SELECT * FROM daily_prices')
+        cur_p.execute('DROP TABLE daily_prices CASCADE')
+        print('  ✓ 已備份舊資料')
+        pg_conn.commit()
+
+        # 重建 partition 表（帶新欄位）
+        cur_p.execute("""
+            CREATE TABLE daily_prices (
+                stock_code  VARCHAR(10) NOT NULL,
+                date        VARCHAR(8)  NOT NULL,
+                open_price  NUMERIC(12,2),
+                high_price  NUMERIC(12,2),
+                low_price   NUMERIC(12,2),
+                close_price NUMERIC(12,2),
+                volume      BIGINT,
+                PRIMARY KEY (stock_code, date)
+            ) PARTITION BY RANGE (date)
+        """)
+        for yr in range(2017, 2031):
+            pname = f'daily_prices_{yr}'
+            lo = f'{yr}0101'
+            hi = f'{yr+1}0101'
+            cur_p.execute(f"""
+                CREATE TABLE IF NOT EXISTS {pname}
+                PARTITION OF daily_prices
+                FOR VALUES FROM ('{lo}') TO ('{hi}')
+            """)
+        cur_p.execute("""
+            CREATE TABLE IF NOT EXISTS daily_prices_default
+            PARTITION OF daily_prices DEFAULT
+        """)
+        cur_p.execute("CREATE INDEX IF NOT EXISTS idx_dp_date ON daily_prices(date)")
+        cur_p.execute("CREATE INDEX IF NOT EXISTS idx_dp_code ON daily_prices(stock_code)")
+        cur_p.execute(f"GRANT ALL ON ALL TABLES IN SCHEMA public TO {DB_USER}")
+        cur_p.execute(f"GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO {DB_USER}")
+        pg_conn.commit()
+        print('  ✓ 已重建新表結構（7欄位：open/high/low/close/volume）')
+
+    # 先遷移 SQLite 新資料
     total = sqlite_conn.execute('SELECT COUNT(*) FROM daily_prices').fetchone()[0]
     print(f'遷移 daily_prices（{total:,} 筆）...')
 
@@ -171,7 +218,7 @@ def migrate_daily_prices(sqlite_conn, pg_conn):
     written = 0
     while True:
         rows = cur_s.execute(
-            'SELECT stock_code, date, close_price '
+            'SELECT stock_code, date, open_price, high_price, low_price, close_price, volume '
             'FROM daily_prices ORDER BY date, stock_code '
             f'LIMIT {BATCH} OFFSET {offset}'
         ).fetchall()
@@ -184,6 +231,22 @@ def migrate_daily_prices(sqlite_conn, pg_conn):
         offset  += BATCH
         print(f'  {written:,} / {total:,}', end='\r', flush=True)
 
+    # 如果有備份，恢復只有收盤價的舊資料
+    if force and existing > 0:
+        print('\n恢復備份的舊資料...')
+        cur_p.execute("""
+            INSERT INTO daily_prices (stock_code, date, close_price)
+            SELECT stock_code, date, close_price
+            FROM daily_prices_backup
+            WHERE (stock_code, date) NOT IN (SELECT stock_code, date FROM daily_prices)
+        """)
+        restored = cur_p.rowcount
+        pg_conn.commit()
+        cur_p.execute('DROP TABLE daily_prices_backup')
+        pg_conn.commit()
+        print(f'  ✓ 已恢復 {restored:,} 筆舊資料')
+        written += restored
+
     print(f'\n✅ daily_prices 遷移完成：{written:,} 筆')
 
 
@@ -192,7 +255,13 @@ def migrate_daily_prices(sqlite_conn, pg_conn):
 # ─────────────────────────────────────────────
 
 def main():
+    import sys
+    force = '--force' in sys.argv
+
     print('=== SQLite → PostgreSQL 遷移 ===\n')
+    if force:
+        print('⚠️  強制模式：將重建 daily_prices 表結構並遷移所有資料')
+        print()
 
     print('─ 步驟 1：建立 DB / 使用者')
     create_db()
@@ -208,7 +277,7 @@ def main():
     )
 
     migrate_holdings(sqlite_conn, pg_conn)
-    migrate_daily_prices(sqlite_conn, pg_conn)
+    migrate_daily_prices(sqlite_conn, pg_conn, force=force)
 
     sqlite_conn.close()
     pg_conn.close()

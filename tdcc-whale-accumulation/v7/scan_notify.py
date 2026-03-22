@@ -48,9 +48,9 @@ MIN_PRICE      = 300.0
 LIMIT_MULT     = 1.03
 
 # ── 補位引擎參數 ──
-FLEE_LOOKBACK_WEEKS = 3      # 回望幾週（改為3週）
-FLEE_MIN_PCT        = -15.0  # 持有人至少跌幾%（改為15%）
-BACKUP_R400_CHG     = 2.0    # 大戶增加幾%（新增條件）
+FLEE_LOOKBACK_WEEKS = 4      # 回望幾週
+FLEE_MIN_PCT        = -5.0   # 持有人至少跌幾%
+BACKUP_R400_CHG     = 0.0    # 大戶增加幾%（移除）
 MIN_PRICE_BACKUP    = 50.0   # 補位引擎最低股價
 BACKUP_MA_PERIOD    = 20     # 需站上幾日均線
 BACKUP_TOP_N        = 5      # LINE 通知最多顯示幾個補位訊號
@@ -290,7 +290,7 @@ def scan_main_signals(conn) -> tuple[list[dict], str]:
 def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
     """
     補位引擎：散戶出逃 + 大戶進場 + 站上 MA20
-    條件：3週持有人↓≥15% + 大戶↑≥2% + 股價站上MA20 + 股價≥50
+    條件：4週持續下降（每週都在減）+ 散戶↓≥5% + 股價站上MA20 + 股價≥50
     進場：TDCC日後第5個交易日（通知只給參考，不查未來價格）
     只掃最新 TDCC 週的訊號
     """
@@ -326,6 +326,13 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
         h_bef   = holders[i - FLEE_LOOKBACK_WEEKS]
         if h_bef <= 0:
             continue
+
+        # ⚠️ 檢查 4 週是否持續下降（每週都在減）
+        h_4weeks = [holders[i - FLEE_LOOKBACK_WEEKS + j] for j in range(FLEE_LOOKBACK_WEEKS + 1)]
+        is_continuous_down = all(h_4weeks[j] > h_4weeks[j+1] for j in range(FLEE_LOOKBACK_WEEKS))
+        if not is_continuous_down:
+            continue
+
         flee = (h_now - h_bef) / h_bef * 100
         if flee > FLEE_MIN_PCT:
             continue

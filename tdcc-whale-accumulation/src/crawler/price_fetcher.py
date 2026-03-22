@@ -26,7 +26,11 @@ CREATE_PRICES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS daily_prices (
     stock_code TEXT NOT NULL,
     date TEXT NOT NULL,
+    open_price REAL,
+    high_price REAL,
+    low_price REAL,
     close_price REAL NOT NULL,
+    volume INTEGER,
     PRIMARY KEY (stock_code, date)
 )
 """
@@ -98,12 +102,13 @@ class PriceFetcher:
         conn.close()
 
     def _save_batch_to_db(self, records: List[tuple]):
-        """Save a batch of (stock_code, date, close_price) to SQLite."""
+        """Save a batch of (stock_code, date, open_price, high_price, low_price, close_price, volume) to SQLite.
+        Uses INSERT OR REPLACE to update existing records with new OHLCV data."""
         if not self.db_path or not records:
             return
         conn = sqlite3.connect(self.db_path, timeout=30)
         conn.executemany(
-            "INSERT OR IGNORE INTO daily_prices (stock_code, date, close_price) VALUES (?, ?, ?)",
+            "INSERT OR REPLACE INTO daily_prices (stock_code, date, open_price, high_price, low_price, close_price, volume) VALUES (?, ?, ?, ?, ?, ?, ?)",
             records,
         )
         conn.commit()
@@ -168,7 +173,7 @@ class PriceFetcher:
             year_month: YYYYMM format, e.g. '202503'
 
         Returns:
-            List of (stock_code, date_YYYYMMDD, close_price) tuples.
+            List of (stock_code, date_YYYYMMDD, open_price, high_price, low_price, close_price, volume) tuples.
         """
         date_param = f"{year_month}01"
         try:
@@ -183,14 +188,24 @@ class PriceFetcher:
             if data.get("stat") != "OK":
                 return []
 
-            # fields: 日期(ROC), 成交股數, 成交金額, 開盤價, 最高價, 最低價, 收盤價(idx 6), 漲跌價差, 成交筆數
+            # fields: 日期(ROC), 成交股數(idx 1), 成交金額(idx 2), 開盤價(idx 3), 最高價(idx 4), 最低價(idx 5), 收盤價(idx 6), 漲跌價差, 成交筆數
             records = []
             for row in data.get("data", []):
                 try:
                     western_date = _roc_to_western(row[0])
+                    open_str = row[3].replace(",", "").strip()
+                    high_str = row[4].replace(",", "").strip()
+                    low_str = row[5].replace(",", "").strip()
                     close_str = row[6].replace(",", "").strip()
-                    close_price = float(close_str)
-                    records.append((stock_code, western_date, close_price))
+                    volume_str = row[1].replace(",", "").strip()
+
+                    open_price = float(open_str) if open_str else None
+                    high_price = float(high_str) if high_str else None
+                    low_price = float(low_str) if low_str else None
+                    close_price = float(close_str) if close_str else None
+                    volume = int(volume_str) if volume_str and volume_str.isdigit() else None
+
+                    records.append((stock_code, western_date, open_price, high_price, low_price, close_price, volume))
                 except (ValueError, IndexError):
                     continue
 
@@ -220,15 +235,16 @@ class PriceFetcher:
             logger.warning(f"STOCK_DAY_ALL failed: {e}")
             return []
 
-    def sync_twse_stocks(self, stock_codes: List[str], start_month: str, end_month: str):
+    def sync_twse_stocks(self, stock_codes: List[str], start_month: str, end_month: str, force: bool = False):
         """
         Bulk sync TWSE stocks via STOCK_DAY (per-stock per-month).
-        Incremental: skips months already fully in DB.
+        Incremental: skips months already fully in DB (unless force=True).
 
         Args:
             stock_codes: List of TWSE stock codes to fetch.
             start_month: Start month YYYYMM (e.g. '202503').
             end_month: End month YYYYMM (e.g. '202602').
+            force: If True, re-fetch all months even if data exists.
         """
         # Generate month list
         months = []
@@ -255,10 +271,11 @@ class PriceFetcher:
 
                 # Check if we already have data for this month
                 # A month is "complete" if we have >= 15 trading days for it
-                month_dates = [d for d in existing_dates if d[:6] == month]
-                if len(month_dates) >= 15:
-                    skipped += 1
-                    continue
+                if not force:
+                    month_dates = [d for d in existing_dates if d[:6] == month]
+                    if len(month_dates) >= 15:
+                        skipped += 1
+                        continue
 
                 records = self.fetch_twse_stock_month(code, month)
                 if records:
