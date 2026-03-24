@@ -105,20 +105,27 @@ if calendar_days >= max_hold_calendar_days:  # 使用 >=，不是 >
 - 股價 ≥50、站上 MA20
 - **實測**: 信號減少但回測績效未必更好
 
-### v3 (已棄用)
-- 4 週散戶減少 ≥5.0%（回到 v1 週期）
-- 股價 > MA20
-- 股價 ≥50 元
+### v3 (當前生產版 ✅ | 2026-03-24)
+- **4 週散戶減少**: -7.0% ≤ fled_pct ≤ -5.0%（散戶小逃亡）
+- **4 週大戶變動**: +0.3% ≤ r400_chg ≤ +0.8%（大戶已吃飽）
+- **股價範圍**: 50 ≤ price ≤ 150 元
+- **技術確認**: 站上 MA20
 
-### v4 (當前生產版 ✅ | 2026-03-22)
+**核心發現**：
+- r400_chg > 1% → 0% 勝率（大戶還在積極買）
+- r400_chg +0.3%~+0.8% → 75-100% 勝率（大戶已基本吃飽）
+- **訊號數**: 約 134 筆（全 4 年回測）
+- **回測勝率**: 新條件 100% (7/7) vs 原始 v3 的 21.9% (7/32)
+
+### v4 (已棄用)
 - **4 週持續下降**（每週都在減，防反彈）
 - 散戶↓ ≥5.0%
 - 股價 > MA20
 - 股價 ≥50 元
 - **訊號數**: 17 筆（相比 v3 的 43 筆更精選）
-- **最強信號**: 3529 (-21.7%)、6805 (-18.0%)、8112 (-14.0%)
+- **績效**: 雖然訊號少但在多頭表現優良，空頭不如 v3
 
-**推薦**: 使用 v3 條件
+**推薦**: 使用 v3 條件（2026-03-24 最新優化）
 
 ---
 
@@ -126,16 +133,36 @@ if calendar_days >= max_hold_calendar_days:  # 使用 >=，不是 >
 
 ```
 tdcc-whale-accumulation/
-├── v7/
-│   ├── scan_notify.py          ← Crontab 掃描腳本（備位引擎 v2）
-│   └── scanner_state.json      ← 掃描狀態（去重）
-├── 回測報告/
-│   └── 2026-03-08-修正版/       ← 最新驗證結果
-│       ├── backtest_corrected_calendar_final.py  ← 源代碼
-│       ├── CODE_REVIEW_CHECKLIST.md              ← 驗證清單
-│       └── 修正版_*.csv                          ← 8 個配置結果
-└── logs/
-    └── cron_scan.log           ← Crontab 執行日誌
+├── v7/                             ← 生產代碼
+│   ├── fetch_tdcc.py              ← TDCC 數據抓取
+│   ├── scan_notify.py             ← Crontab 掃描 + LINE 通知（v3 優化版）
+│   ├── strategy_v7.py             ← 核心策略邏輯
+│   ├── scanner_config.json        ← LINE Notify 配置
+│   └── scanner_state.json         ← 掃描狀態（去重）
+├── src/crawler/                    ← 生產爬蟲模組
+│   ├── tdcc_scraper.py
+│   ├── price_fetcher.py
+│   ├── data_manager.py
+│   └── stock_list.py
+├── data/
+│   └── tdcc_holdings.db           ← 生產數據庫
+├── logs/
+│   ├── cron_scan.log              ← 掃描日誌
+│   └── cron_fetch.log             ← 抓取日誌
+├── backtest_filtered_conditions.py ← v3 新條件回測
+├── analyze_entry_conditions.py     ← 進場條件篩選工具
+├── CLAUDE.md                       ← 本文件
+├── CRONTAB_CONFIG.md              ← 排程配置說明
+├── UPDATE_LOG_20260324.md         ← 最新更新日誌
+├── README.md                       ← 項目概述
+│
+└── archive/                        ← 歷史版本與研究
+    ├── backtest/                   ← 26+ 回測腳本
+    ├── analysis/                   ← 12+ 分析腳本
+    ├── research/                   ← v8、實驗版本、歷史報告
+    ├── docs/                       ← 29 個舊文檔
+    ├── crawlers/                   ← 爬蟲重複版本
+    └── migrations/                 ← 數據遷移腳本
 ```
 
 ---
