@@ -56,17 +56,19 @@ MAX_HOLDER_CHG = -2.0
 MIN_PRICE      = 300.0
 LIMIT_MULT     = 1.03
 
-# ── 補位引擎參數（2026-03-24 優化版）──
-# 核心邏輯: 散戶「小」逃亡 + 大戶「已」吃飽 = 進場
+# ── 補位引擎參數 ──
 FLEE_LOOKBACK_WEEKS = 4       # 回望幾週
-FLEE_MIN_PCT        = -7.0    # 散戶逃幅最小（-7%）
-FLEE_MAX_PCT        = -5.0    # 散戶逃幅最大（-5%）- 適度逃離，未過度恐慌
-BACKUP_R400_CHG_MIN = 0.3     # 大戶買進最少（+0.3%）- 已開始調倉
-BACKUP_R400_CHG_MAX = 0.8     # 大戶買進最多（+0.8%）- 已基本吃飽，輕微調整
-MIN_PRICE_BACKUP    = 50.0    # 補位引擎最低股價
-MAX_PRICE_BACKUP    = 150.0   # 補位引擎最高股價 - 便宜股易吃貨
+FLEE_MIN_PCT        = -5.0    # 基本門檻：散戶逃幅≥5%
+MIN_PRICE_BACKUP    = 50.0    # 最低股價 50 元
 BACKUP_MA_PERIOD    = 20      # 需站上幾日均線
 BACKUP_TOP_N        = 5       # LINE 通知最多顯示幾個補位訊號
+
+# ── 補位引擎「最優條件」（勝率 75-100%，用於排序與標記）──
+SWEET_FLEE_MIN  = -7.0   # 最優逃幅下限
+SWEET_FLEE_MAX  = -5.0   # 最優逃幅上限
+SWEET_R400_MIN  =  0.3   # 最優大戶變動下限
+SWEET_R400_MAX  =  0.8   # 最優大戶變動上限
+SWEET_PRICE_MAX = 150.0  # 最優股價上限
 
 
 # ── 設定 / 狀態 ───────────────────────────────────────────────
@@ -338,33 +340,22 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
         if iso_week_key(grp[-1][1]) != tdcc_week:
             continue
 
-        holders = [x[4] for x in grp]   # index 4 = total_holders
-        r400    = [x[2] for x in grp]   # index 2 = ratio_400_above
+        holders = [x[4] for x in grp]
+        r400    = [x[2] for x in grp]
         i       = len(grp) - 1
         h_now   = holders[i]
         h_bef   = holders[i - FLEE_LOOKBACK_WEEKS]
         if h_bef <= 0:
             continue
 
-        # ✅ 條件1: 檢查 4 週是否持續下降（每週都在減）
-        h_4weeks = [holders[i - FLEE_LOOKBACK_WEEKS + j] for j in range(FLEE_LOOKBACK_WEEKS + 1)]
-        is_continuous_down = all(h_4weeks[j] > h_4weeks[j+1] for j in range(FLEE_LOOKBACK_WEEKS))
-        if not is_continuous_down:
-            continue
-
-        # ✅ 條件2: 散戶逃幅 -7% ≤ fled_pct ≤ -5%（適度逃離）
         flee = (h_now - h_bef) / h_bef * 100
-        if flee > FLEE_MAX_PCT or flee < FLEE_MIN_PCT:
+        if flee > FLEE_MIN_PCT:   # 基本門檻：散戶逃幅≥5%
             continue
 
-        # ✅ 條件3: 大戶買進 +0.3% ≤ r400_chg ≤ +0.8%（已吃飽，輕微調整）
         r400_now = float(r400[i] or 0)
         r400_bef = float(r400[i - FLEE_LOOKBACK_WEEKS] or 0)
         r400_chg = r400_now - r400_bef
-        if r400_chg < BACKUP_R400_CHG_MIN or r400_chg > BACKUP_R400_CHG_MAX:
-            continue
 
-        # 取得 TDCC 日的股價與 MA20
         pdates = price_data.get(code, [])
         if not pdates:
             continue
@@ -378,20 +369,22 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
             continue
 
         cp = close_list[pi]
-
-        # ✅ 股價範圍: 50-150 元（便宜股）
-        if cp < MIN_PRICE_BACKUP or cp > MAX_PRICE_BACKUP:
+        if cp < MIN_PRICE_BACKUP:
             continue
 
-        # ✅ 條件4: 站上 MA20（用 TDCC 日前20筆計算，不含當天）
         if pi < BACKUP_MA_PERIOD:
             continue
         ma20 = sum(close_list[pi - BACKUP_MA_PERIOD:pi]) / BACKUP_MA_PERIOD
         if cp < ma20:
             continue
 
-        # ⚠️ scan_notify 不查未來價格，只用 TDCC 當天收盤做參考
-        # 實際買入：TDCC 公布後隔天以收盤價掛單
+        # 最優條件（勝率 75-100%）：用於排序與 LINE 標記
+        is_sweet = (
+            SWEET_FLEE_MIN <= flee <= SWEET_FLEE_MAX and
+            SWEET_R400_MIN <= r400_chg <= SWEET_R400_MAX and
+            cp <= SWEET_PRICE_MAX
+        )
+
         signals.append({
             'signal_date': tdcc_date,
             'code':        code,
@@ -400,10 +393,11 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
             'holders_now': h_now,
             'tdcc_close':  round(cp, 1),
             'ma20':        round(ma20, 1),
+            'is_sweet':    is_sweet,
         })
 
-    # 散戶跑幅最大的優先（表示最穩定的出逃）
-    return sorted(signals, key=lambda x: x['flee_pct'])
+    # 最優條件優先，同組內逃幅最大的優先
+    return sorted(signals, key=lambda x: (not x['is_sweet'], x['flee_pct']))
 
 
 # ── LINE ──────────────────────────────────────────────────────
@@ -454,12 +448,15 @@ def build_message(main_signals: list[dict], backup_signals: list[dict],
 
     # ── 主引擎無訊號 → 補位引擎頂上 ──
     if backup_signals:
-        top = backup_signals[:BACKUP_TOP_N]
-        lines += ['', f'📌 補位引擎 前{len(top)}（散戶小逃-7%~-5% + 大戶已吃飽+0.3%~+0.8%，共{len(backup_signals)}個，TDCC {sd}）',
-                  '股價50-150元、站上MA20、TDCC日後隔天收盤買入', '']
+        top      = backup_signals[:BACKUP_TOP_N]
+        n_sweet  = sum(1 for s in backup_signals if s['is_sweet'])
+        sweet_note = f'（其中 ⭐{n_sweet} 個符合最優條件）' if n_sweet else ''
+        lines += ['', f'📌 補位引擎 前{len(top)}（共{len(backup_signals)}個{sweet_note}，TDCC {sd}）',
+                  '散戶逃幅≥5% + 站上MA20 + 股價≥50｜⭐ = 逃幅-7%~-5% + 大戶+0.3%~+0.8% + 股價≤150', '']
         for s in top:
+            star = '⭐' if s['is_sweet'] else '  '
             lines += [
-                f"【{s['code']}】散戶逃{s['flee_pct']:+.1f}%｜大戶+{s['r400_chg']:+.3f}%｜{s['tdcc_close']:.0f}元(MA20:{s['ma20']:.0f})",
+                f"{star}【{s['code']}】散戶{s['flee_pct']:+.1f}%｜大戶{s['r400_chg']:+.3f}%｜{s['tdcc_close']:.0f}元(MA20:{s['ma20']:.0f})",
                 f"  持有人{s['holders_now']:,}｜TDCC後隔天買入",
                 '',
             ]
