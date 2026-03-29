@@ -352,6 +352,11 @@ def scan_backup_signals(conn, tdcc_date: str) -> list[dict]:
         if flee > FLEE_MIN_PCT:   # 基本門檻：散戶逃幅≥5%
             continue
 
+        # 4 週持續下降（每週都在減）
+        h_4weeks = [holders[i - FLEE_LOOKBACK_WEEKS + j] for j in range(FLEE_LOOKBACK_WEEKS + 1)]
+        if not all(h_4weeks[j] > h_4weeks[j + 1] for j in range(FLEE_LOOKBACK_WEEKS)):
+            continue
+
         r400_now = float(r400[i] or 0)
         r400_bef = float(r400[i - FLEE_LOOKBACK_WEEKS] or 0)
         r400_chg = r400_now - r400_bef
