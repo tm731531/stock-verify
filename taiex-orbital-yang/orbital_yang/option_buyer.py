@@ -54,6 +54,8 @@ class OptionParams:
     expiry_days: int            # 進場時剩餘到期 (交易日)
     target_premium: float       # 進場權利金 (點), e.g. 30
     point_value: float = 50.0   # TXO 1 點 = NT$50
+    half_spread_pts: float = 0.0    # 半個買賣價差(點): 買付 +half, 賣收 -half
+    commission_ntd: float = 0.0     # 單邊手續費(NT$/口)
 
 
 @dataclass
@@ -102,10 +104,17 @@ def simulate_option_trades(df, trades, params: OptionParams) -> list:
         T_exit = max(0.0, (params.expiry_days - held) / yr)
         S_exit = c[exit_bar]
         exit_prem = bs_price(S_exit, K, T_exit, sigma, kind)
-        pnl = exit_prem - entry_prem
-        mult = (exit_prem / entry_prem) if entry_prem > 1e-9 else 0.0
+        worthless = exit_prem <= 1e-6
+        commission_pts = params.commission_ntd / params.point_value
+        paid = entry_prem + params.half_spread_pts + commission_pts
+        if worthless:
+            received = 0.0                      # 放到期歸零, 不賣 -> 無出場成本
+        else:
+            received = max(0.0, exit_prem - params.half_spread_pts - commission_pts)
+        pnl = received - paid
+        mult = (exit_prem / entry_prem) if entry_prem > 1e-9 else 0.0   # 倍數用毛權利金(他的語言)
         out.append(OptionTrade(tr.direction, kind, entry_prem, exit_prem, pnl,
-                               mult, exit_prem <= 1e-6))
+                               mult, worthless))
     return out
 
 

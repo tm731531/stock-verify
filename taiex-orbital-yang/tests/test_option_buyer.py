@@ -60,3 +60,18 @@ def test_summarize_multiples():
     assert perf.n_trades == 2
     assert 0.0 <= perf.rate_2x <= 1.0
     assert 0.0 <= perf.worthless_rate <= 1.0
+
+
+def test_costs_reduce_pnl():
+    import pandas as pd
+    from orbital_yang.backtest import Trade
+    df = pd.DataFrame({"date": pd.date_range("2026-01-01", periods=4, freq="D"),
+                       "open": [20000, 20300, 20600, 20600], "high": [20000, 20300, 20600, 20600],
+                       "low": [20000, 20300, 20600, 20600], "close": [20000, 20300, 20600, 20600],
+                       "volume": [1, 1, 1, 1]})
+    tr = Trade(0, 2, "long", 20000, 20600, 600, "target")
+    gross = simulate_option_trades(df, [tr], OptionParams(0.2, 3, 30.0))[0]
+    net = simulate_option_trades(df, [tr], OptionParams(0.2, 3, 30.0, half_spread_pts=1.0, commission_ntd=20.0))[0]
+    assert net.pnl < gross.pnl                       # 成本讓淨損益變低
+    # 一個贏單的成本 = 來回價差(2) + 來回手續費(2*20/50=0.8) = 2.8 點
+    assert abs((gross.pnl - net.pnl) - 2.8) < 1e-6
