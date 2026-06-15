@@ -25,6 +25,8 @@ class BacktestParams:
     stop_buffer_pct: float   # 停損放在被破關卡的反向緩衝 (e.g. 0.003)
     target_mult: float       # 滿足點 = 進場 +/- target_mult * 關卡K實體 (測幅)
     max_hold: int            # 最多持有幾根, 逾時以收盤平倉
+    congestion_window: int = 0     # >0 時要求突破前 N 根為盤整(成本集中)才進場
+    congestion_pct: float = 1.0    # 突破前 N 根收盤全距 / 現價 <= 此值才算盤整
 
 
 @dataclass
@@ -37,6 +39,20 @@ class Performance:
     payoff: float          # avg_win / |avg_loss|
     expectancy: float      # 每筆期望點數
     total_pnl: float
+
+
+def _congestion_ok(c, t, params: BacktestParams) -> bool:
+    """突破前是否為盤整(成本集中): 前 congestion_window 根收盤全距/現價 <= congestion_pct。
+
+    congestion_window<=0 -> 不過濾, 一律 True (向後相容)。
+    """
+    w = params.congestion_window
+    if w <= 0:
+        return True
+    if t - w < 0:
+        return False
+    seg = c[t - w:t]
+    return bool((seg.max() - seg.min()) / c[t] <= params.congestion_pct)
 
 
 def run_backtest(df, levels, params: BacktestParams) -> list:
@@ -56,13 +72,13 @@ def run_backtest(df, levels, params: BacktestParams) -> list:
             price = L.price
             b = body[L.idx]
             if L.kind == "resistance":   # 過: 向上突破壓力 -> 做多
-                if c[t] >= price * (1 + params.breakout_pct) and c[t - 1] < price:
+                if c[t] >= price * (1 + params.breakout_pct) and c[t - 1] < price and _congestion_ok(c, t, params):
                     stop = price * (1 - params.stop_buffer_pct)
                     target = c[t] + params.target_mult * b
                     entered = ("long", c[t], stop, target)
                     break
             else:                        # 破: 向下跌破支撐 -> 做空
-                if c[t] <= price * (1 - params.breakout_pct) and c[t - 1] > price:
+                if c[t] <= price * (1 - params.breakout_pct) and c[t - 1] > price and _congestion_ok(c, t, params):
                     stop = price * (1 + params.stop_buffer_pct)
                     target = c[t] - params.target_mult * b
                     entered = ("short", c[t], stop, target)

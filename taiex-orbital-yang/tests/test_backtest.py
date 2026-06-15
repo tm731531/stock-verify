@@ -72,3 +72,15 @@ def test_summarize_math():
     assert perf.payoff == 2.0
     assert perf.expectancy == 5.0
     assert perf.total_pnl == 10.0
+
+
+def test_congestion_ok_tight_vs_wide():
+    import numpy as np
+    from orbital_yang.backtest import _congestion_ok, BacktestParams
+    p = BacktestParams(0.001, 0.003, 2.0, 20, congestion_window=5, congestion_pct=0.02)
+    tight = np.array([100, 100.5, 99.8, 100.2, 100.1, 105.0])   # 前5根全距0.7
+    assert _congestion_ok(tight, 5, p) is True
+    wide = np.array([90, 110, 95, 108, 100, 112.0])             # 前5根全距20
+    assert _congestion_ok(wide, 5, p) is False
+    p0 = BacktestParams(0.001, 0.003, 2.0, 20)                  # window=0 -> 不過濾
+    assert _congestion_ok(wide, 5, p0) is True
