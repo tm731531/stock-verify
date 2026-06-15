@@ -27,6 +27,9 @@ class BacktestParams:
     max_hold: int            # 最多持有幾根, 逾時以收盤平倉
     congestion_window: int = 0     # >0 時要求突破前 N 根為盤整(成本集中)才進場
     congestion_pct: float = 1.0    # 突破前 N 根收盤全距 / 現價 <= 此值才算盤整
+    require_trend: bool = False     # True 時只做與大小流氓(月季線)合一同向的突破
+    trend_fast: int = 20            # 小流氓=月線 MA
+    trend_slow: int = 60            # 大流氓=季線 MA
 
 
 @dataclass
@@ -39,6 +42,25 @@ class Performance:
     payoff: float          # avg_win / |avg_loss|
     expectancy: float      # 每筆期望點數
     total_pnl: float
+
+
+def trend_alignment(df, fast: int = 20, slow: int = 60):
+    """大小流氓合一方向: 1=多(收>MA_fast>MA_slow), -1=空(收<MA_fast<MA_slow), 0=無。
+
+    前 slow 根 (MA 為 NaN) 一律 0。
+    """
+    import numpy as np
+    import pandas as pd
+    c = df["close"].to_numpy(float)
+    maf = pd.Series(c).rolling(fast).mean().to_numpy()
+    mas = pd.Series(c).rolling(slow).mean().to_numpy()
+    out = np.zeros(len(c), dtype=int)
+    valid = ~(np.isnan(maf) | np.isnan(mas))
+    bull = valid & (c > maf) & (maf > mas)
+    bear = valid & (c < maf) & (maf < mas)
+    out[bull] = 1
+    out[bear] = -1
+    return out
 
 
 def _congestion_ok(c, t, params: BacktestParams) -> bool:
@@ -61,6 +83,7 @@ def run_backtest(df, levels, params: BacktestParams) -> list:
     body = np.abs(c - o)
     n = len(c)
     lv_sorted = sorted(levels, key=lambda L: L.idx)
+    trend = trend_alignment(df, params.trend_fast, params.trend_slow) if params.require_trend else None
 
     trades = []
     t = 1
@@ -72,13 +95,17 @@ def run_backtest(df, levels, params: BacktestParams) -> list:
             price = L.price
             b = body[L.idx]
             if L.kind == "resistance":   # 過: 向上突破壓力 -> 做多
-                if c[t] >= price * (1 + params.breakout_pct) and c[t - 1] < price and _congestion_ok(c, t, params):
+                if (c[t] >= price * (1 + params.breakout_pct) and c[t - 1] < price
+                        and _congestion_ok(c, t, params)
+                        and (trend is None or trend[t] == 1)):
                     stop = price * (1 - params.stop_buffer_pct)
                     target = c[t] + params.target_mult * b
                     entered = ("long", c[t], stop, target)
                     break
             else:                        # 破: 向下跌破支撐 -> 做空
-                if c[t] <= price * (1 - params.breakout_pct) and c[t - 1] > price and _congestion_ok(c, t, params):
+                if (c[t] <= price * (1 - params.breakout_pct) and c[t - 1] > price
+                        and _congestion_ok(c, t, params)
+                        and (trend is None or trend[t] == -1)):
                     stop = price * (1 + params.stop_buffer_pct)
                     target = c[t] - params.target_mult * b
                     entered = ("short", c[t], stop, target)

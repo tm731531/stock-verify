@@ -84,3 +84,15 @@ def test_congestion_ok_tight_vs_wide():
     assert _congestion_ok(wide, 5, p) is False
     p0 = BacktestParams(0.001, 0.003, 2.0, 20)                  # window=0 -> 不過濾
     assert _congestion_ok(wide, 5, p0) is True
+
+
+def test_trend_alignment_bull_bear():
+    import pandas as pd
+    from orbital_yang.backtest import trend_alignment
+    up = pd.DataFrame({"close": list(range(1, 101))})       # 單調上升
+    t = trend_alignment(up, fast=5, slow=10)
+    assert t[-1] == 1                                        # 收>MA20>MA60 -> 多
+    down = pd.DataFrame({"close": list(range(100, 0, -1))})
+    t2 = trend_alignment(down, fast=5, slow=10)
+    assert t2[-1] == -1
+    assert t[0] == 0 and t[8] == 0                           # 前 slow 根為 0
