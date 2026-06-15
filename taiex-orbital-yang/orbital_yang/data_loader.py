@@ -11,8 +11,8 @@ def load_daily(csv_path: str) -> pd.DataFrame:
     """
     raw = pd.read_csv(csv_path)
     first = raw.columns[0]
-    # yfinance 匯出第一列資料其實是 'Ticker' 雜訊列,丟掉
-    raw = raw[raw[first].astype(str) != "Ticker"].copy()
+    # yfinance 匯出開頭有 'Ticker' / 'Date' 雜訊列(2-row 或 3-row 格式),丟掉
+    raw = raw[~raw[first].astype(str).isin(["Ticker", "Date"])].copy()
     raw = raw.rename(columns={first: "date"})
     raw.columns = [str(c).lower() for c in raw.columns]
     raw["date"] = pd.to_datetime(raw["date"])
