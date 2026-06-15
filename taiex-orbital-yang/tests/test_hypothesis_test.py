@@ -1,6 +1,8 @@
 import pandas as pd
 from orbital_yang.body_levels import Level
-from orbital_yang.hypothesis_test import TestParams, evaluate_levels, random_control
+from orbital_yang.hypothesis_test import (
+    TestParams, evaluate_levels, control_uniform, control_matched,
+)
 
 
 def _df(closes, opens=None):
@@ -19,32 +21,41 @@ def _df(closes, opens=None):
     )
 
 
+# L=100 下: epsilon_pct=0.005 -> eps=0.5, reaction_pct=0.05 -> react=5.0
+_PARAMS = TestParams(epsilon_pct=0.005, window=4, reaction_pct=0.05)
+
+
 def test_support_bounce_is_react_success():
-    # 關卡 L=100 形成於 idx0; 之後跌到觸碰 100 再彈到 >=105
     df = _df([100, 103, 100, 102, 106, 108])
     level = Level(idx=0, date=df["date"].iloc[0], price=100.0, kind="support")
-    params = TestParams(epsilon=0.5, window=4, reaction=5.0)
-    stats = evaluate_levels(df, [level], params)
+    stats = evaluate_levels(df, [level], _PARAMS)
     assert stats.n_touch == 1
     assert stats.n_react == 1
     assert stats.react_rate == 1.0
 
 
 def test_support_breakdown_is_not_react():
-    # 觸碰 100 後直接跌破到 94(< L-eps), 不算反彈成功
     df = _df([100, 101, 100, 96, 94, 93])
     level = Level(idx=0, date=df["date"].iloc[0], price=100.0, kind="support")
-    params = TestParams(epsilon=0.5, window=4, reaction=5.0)
-    stats = evaluate_levels(df, [level], params)
+    stats = evaluate_levels(df, [level], _PARAMS)
     assert stats.n_touch == 1
     assert stats.n_react == 0
     assert stats.react_rate == 0.0
 
 
-def test_random_control_is_reproducible():
+def test_control_uniform_is_reproducible():
     df = _df([100, 102, 101, 103, 99, 104, 100, 105])
     level = Level(idx=0, date=df["date"].iloc[0], price=100.0, kind="support")
-    params = TestParams(epsilon=0.5, window=4, reaction=5.0)
-    a = random_control(df, [level], params, n_sets=10, seed=42)
-    b = random_control(df, [level], params, n_sets=10, seed=42)
-    assert a.react_rate == b.react_rate     # 固定種子可重現
+    a = control_uniform(df, [level], _PARAMS, n_sets=10, seed=42)
+    b = control_uniform(df, [level], _PARAMS, n_sets=10, seed=42)
+    assert a.react_rate == b.react_rate
+
+
+def test_control_matched_is_reproducible_and_same_side():
+    # 真實支撐在收盤下方(open=95 < close=100); 方向匹配假關卡也應在下方且可重現
+    df = _df([100, 102, 101, 103, 99, 104, 100, 105], opens=[95, 102, 101, 103, 99, 104, 100, 105])
+    level = Level(idx=0, date=df["date"].iloc[0], price=95.0, kind="support")
+    a = control_matched(df, [level], _PARAMS, n_sets=10, seed=7)
+    b = control_matched(df, [level], _PARAMS, n_sets=10, seed=7)
+    assert a.react_rate == b.react_rate
+    assert a.n_levels == 10
