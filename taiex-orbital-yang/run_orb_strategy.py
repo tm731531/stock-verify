@@ -1,5 +1,5 @@
-"""軌道鞅完整策略: 大小流氓剛轉勢 + 順向 ORB + 真實成本 + 真實選擇權買方。
-對照『天天做 ORB』看選擇性有沒有把好日子濃縮出來。"""
+"""軌道鞅完整策略: 順大小流氓格局方向(每天) ORB + 真實成本 + 真實選擇權買方。
+格局=MA20/MA60 持續方向, 順格局每天做; 對照『天天做(兩邊都做)』與剛轉勢窗。"""
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ from orbital_yang.data_loader import load_daily
 from orbital_yang.orb import run_orb, summarize_orb, ORBParams
 from orbital_yang.orb_options import apply_futures_cost, option_ohlc, buyer_pnl
 from orbital_yang.txo_data import fetch_chain, pick_entry_option
-from orbital_yang.regime import fresh_turn_direction
+from orbital_yang.regime import fresh_turn_direction, alignment_sign
 
 HERE = Path(__file__).parent
 DAILY = HERE / "data" / "TXF_daily.csv"
@@ -79,6 +79,19 @@ def main():
     print(f"全部 ORB {len(allt)} 筆")
 
     rows = [orow("天天做 ORB", ga, na, oa)]
+
+    # 順格局方向(每天, 無窗): MA20/MA60 持續方向 = 格局, 順格局每天做
+    sign = alignment_sign(daily, 20, 60)
+    rdates = pd.to_datetime(daily["date"]).dt.strftime("%Y-%m-%d").to_numpy()
+    regime = {str(d): int(s) for d, s in zip(rdates, sign) if s != 0}
+    rfilt = [t for t in allt
+             if regime.get(str(t.date)) == (1 if t.direction == "long" else -1)]
+    grg, nrg = summarize_orb(rfilt), fut_net(rfilt)
+    # 筆數多, 用 DATE_FLOOR 限制 FinMind 請求
+    org = opt_map(rfilt, date_floor=DATE_FLOOR)
+    print(f"順格局方向(每天, 無窗): {len(rfilt)} 筆")
+    rows.append(orow("順格局方向 (每天, 無窗)", grg, nrg, org))
+
     for window in TURN_WINDOWS:
         allowed = fresh_turn_direction(daily, 20, 60, window)
         filt = [t for t in allt
@@ -89,14 +102,15 @@ def main():
         print(f"剛轉勢順向 窗 {window} 日: {len(filt)} 筆")
         rows.append(orow(f"剛轉勢順向 (窗 {window} 日)", gf, nf, of))
 
-    lines = ["# 軌道鞅完整策略: 大小流氓剛轉勢 + 順向 ORB", "",
-             "轉勢窗掃描 [20/40/60] 日; 期貨含成本; 選擇權真實權利金 "
-             "(baseline 用 DATE_FLOOR 限請求, 過濾組抓全部日期)。", "",
+    lines = ["# 軌道鞅完整策略: 大小流氓格局方向 + 順向 ORB", "",
+             "頭條=順格局方向(每天, MA20/MA60 持續方向); 另列剛轉勢窗 [20/40/60] 對照。",
+             "期貨含成本; 選擇權真實權利金 (多筆組用 DATE_FLOOR 限請求, 小窗組抓全部日期)。", "",
              "| 版本 | 期貨筆數 | 勝率 | 期貨淨期望 | 買方配對 | base ROI | best ROI | best 2x | best 3x |",
              "|---|---|---|---|---|---|---|---|---|"]
     lines += rows
     lines += ["",
-              "> 隨轉勢窗放寬, 看勝率/淨期望/2x 率是否撐得住, 還是 9 筆只是雜訊。"]
+              "> 順格局方向(每天)才是老師真正打法: 格局多就每天順多, 翻空才順空。",
+              "> 看它相對『天天做(兩邊都做)』是否把勝率/淨期望/2x 率拉高。"]
     md = "\n".join(lines) + "\n"
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(md)
