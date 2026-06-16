@@ -19,37 +19,29 @@ MAN = 25  # 1滿=25點
 
 def fmt(c, cur_price: float) -> str:
     if c.regime == 0:
-        return f"📊 軌道鞅當沖｜{c.date}\n今天無格局 → 不做"
+        return f"📊 軌道鞅當沖｜{c.date}\n今天不做"
     if c.regime == 1:
-        opt, trig, bust = "CALL", c.ref_high, c.ref_low
-        t2, t4 = trig + 2 * MAN, trig + 4 * MAN
+        opt, side, trig, bust = "CALL", "C", c.ref_high, c.ref_low
+        sell = trig + 2 * MAN
         tw, bw = "站上", "跌破"
-        side = "多"
+        reached = cur_price >= trig
     else:
-        opt, trig, bust = "PUT", c.ref_low, c.ref_high
-        t2, t4 = trig - 2 * MAN, trig - 4 * MAN
+        opt, side, trig, bust = "PUT", "P", c.ref_low, c.ref_high
+        sell = trig - 2 * MAN
         tw, bw = "跌破", "站上"
-        side = "空"
+        reached = cur_price <= trig
 
     L = [f"📊 軌道鞅當沖｜{c.date}", "",
-         f"① 買 {opt}（今天{side}格局，只買 {opt}）", "",
-         f"② 進場：台指期【{tw} {trig:.0f}】就買一口 ~20-30 的 {opt}（價外）"]
+         f"買 {opt}（今天只買 {side}）", "",
+         f"買點：台指期{tw} {trig:.0f} → 買一個 ~30 的 {opt}",
+         f"賣點：台指期到 {sell:.0f} → 賣掉（賺了就跑）",
+         f"放生：台指期{bw} {bust:.0f} → 放到歸零", ""]
     if c.has_trade:
-        L.append(f"　　✅ 已{tw} {trig:.0f}（{c.entry_time}）→ 可以買了")
+        L.append(f"👉 今天{tw} {trig:.0f} 了（{c.entry_time}）→ 可以買")
+    elif reached:
+        L.append(f"👉 現在 {cur_price:.0f}，已{tw} {trig:.0f} → 可以買")
     else:
-        reached = (cur_price >= trig) if c.regime == 1 else (cur_price <= trig)
-        if reached:
-            L.append(f"　　台指期現在 {cur_price:.0f}，已{tw} {trig:.0f} → 可以買")
-        else:
-            L.append(f"　　台指期現在 {cur_price:.0f}，還沒{tw} {trig:.0f} → 先別買，等它")
-    L += ["",
-          f"③ 賣點：買了之後，台指期到這就賣掉 {opt}：",
-          f"　　🎯 {t2:.0f}（先賣一半/全賣）",
-          f"　　🎯 {t4:.0f}（想貪到這）",
-          "",
-          f"④ 放生：台指期【{bw} {bust:.0f}】→ 這單不管，放到歸零（賠掉那 20-30 權利金）",
-          "",
-          f"※ 沒{tw} {trig:.0f} = 今天空手不買。一天最多1-2次，當天一定平倉。"]
+        L.append(f"👉 現在 {cur_price:.0f}，還沒{tw} {trig:.0f} → 空手等")
     return "\n".join(L)
 
 
