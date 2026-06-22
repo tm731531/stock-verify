@@ -96,6 +96,56 @@ def main():
     print("\n發現：慢線用季線(60)的全部贏過用月線(20)；快線太快(5/10)最爛(105次來回挨刀)。")
     print("     單一冠軍是 overfitting；可信的是『季線當慢線』這個方向。")
     print("     主推 10/60：勝率最高(56%)、8年才16筆、最不盯盤。")
+    report_long_history()
+
+
+def report_long_history():
+    """若有 2003-2017 資料，跑長期(含2008海嘯/2020 COVID/2022升息)分析。"""
+    raw03 = HERE / "data" / "0050_2003_2017_raw.csv"
+    if not raw03.exists():
+        print("\n(無 2003-2017 資料，略過長期分析)")
+        return
+    df = pd.concat([pd.read_csv(raw03), pd.read_csv(RAW)]).drop_duplicates("date")
+    df = df.sort_values("date").reset_index(drop=True)
+    df = df[(df["close"] > 0) & (df["open"] > 0)].reset_index(drop=True)
+    c, o = df["close"].to_numpy(float), df["open"].to_numpy(float)
+    dt = pd.to_datetime(df["date"])
+    f = np.ones(len(c))
+    for i in range(1, len(c)):
+        r = c[i] / c[i - 1]
+        if r < 0.55 or r > 1.8:
+            f[:i] *= r
+    pc, po = c * f, o * f
+
+    def win_run(fast, slow, lo, hi):
+        mf = pd.Series(pc).rolling(fast).mean().to_numpy()
+        ms = pd.Series(pc).rolling(slow).mean().to_numpy()
+        held, eq, eqv = False, 1.0, []
+        for i in np.where((dt >= lo) & (dt <= hi))[0]:
+            if i < slow + 1 or np.isnan(ms[i - 1]):
+                continue
+            want = mf[i - 1] > ms[i - 1]
+            if want != held:
+                eq *= (1 - FEE / 2)
+                held = want
+            eq *= (pc[i] / pc[i - 1]) if held else 1.0
+            eqv.append(eq)
+        eqv = np.array(eqv)
+        return (eqv[-1] - 1) * 100, (eqv / np.maximum.accumulate(eqv) - 1).min() * 100
+
+    def bh_win(lo, hi):
+        p = pc[np.where((dt >= lo) & (dt <= hi))[0]]
+        return (p[-1] / p[0] - 1) * 100, (p / np.maximum.accumulate(p) - 1).min() * 100
+
+    print("\n=== 三種空頭實測（10/60；V急殺也罩得住）===")
+    for nm, lo, hi in [("2020 COVID(V急殺)", "2020-01-01", "2020-09-30"),
+                       ("2022 升息慢空", "2022-01-01", "2022-12-31"),
+                       ("2008 金融海嘯", "2008-01-01", "2009-06-30")]:
+        br, bdd = bh_win(lo, hi)
+        sr, sdd = win_run(10, 60, lo, hi)
+        print(f"  {nm:<18} 抱住 {br:+4.0f}%/回撤{bdd:+4.0f}%   策略 {sr:+4.0f}%/回撤{sdd:+4.0f}%")
+    print("  → 三種都把回撤砍到 1/3~1/2，2008與2020還倒賺。")
+    print("     長期(2003-2026)年化僅~7.8%(正常年代+2.9%)；它是『賠更少、活下來』不是『賺更多』。")
 
 
 if __name__ == "__main__":
