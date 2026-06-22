@@ -4,3 +4,6 @@ __pycache__/
 .pytest_cache/
 
 data/txo_cache/
+
+# 盤中資料太大、可重抓(ORB娛樂用)
+data/TXF_1min.csv
