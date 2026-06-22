@@ -102,30 +102,29 @@ def main():
     f_prev, s_prev = sma(vals, FAST, i - 1), sma(vals, SLOW, i - 1)
     diff = f_now - s_now
 
-    if f_prev <= s_prev and f_now > s_now:
-        state, detail = "🔼 往上交叉（黃金交叉）", "十日線剛由下往上穿過月線"
-    elif f_prev >= s_prev and f_now < s_now:
-        state, detail = "🔽 往下交叉（死亡交叉）", "十日線剛由上往下跌破月線"
-    elif f_now > s_now:
-        k = 0
-        while i - k - 1 >= SLOW and sma(vals, FAST, i - k - 1) > sma(vals, SLOW, i - k - 1):
-            k += 1
-        state, detail = "↗ 岔開（十日線在月線之上）", f"維持多方排列第 {k + 1} 天"
-    else:
-        k = 0
-        while i - k - 1 >= SLOW and sma(vals, FAST, i - k - 1) < sma(vals, SLOW, i - k - 1):
-            k += 1
-        state, detail = "↘ 岔開（十日線在月線之下）", f"維持空方排列第 {k + 1} 天"
+    # 差距趨勢：收窄=正在靠近換邊（看5個交易日前）
+    LOOKBACK = 5
+    g_old = (sma(vals, FAST, i - LOOKBACK) - sma(vals, SLOW, i - LOOKBACK)
+             if i - LOOKBACK >= SLOW else None)
+    narrowing = g_old is not None and abs(diff) < abs(g_old)
 
-    pos = "之上" if diff > 0 else "之下"
-    msg = ("📈 0050 十日線/月線｜每日狀態\n"
-           f"📅 收盤日 {dates[i]}\n\n"
-           f"收盤　 {vals[i]:.2f}\n"
-           f"十日線 {f_now:.2f}\n"
-           f"月線　 {s_now:.2f}\n"
-           f"差距　 {diff:+.2f}（十日線在月線{pos}）\n\n"
-           f"狀態：{state}\n　　　{detail}\n\n"
-           f"（只報交叉狀態，不含買賣建議｜來源 {source}）")
+    if f_prev <= s_prev and f_now > s_now:           # 今天剛上叉
+        head, act, warn = "🟢 今天：買進", "👉 明天開盤 壓多 0050（全壓）", ""
+    elif f_prev >= s_prev and f_now < s_now:         # 今天剛下叉
+        head, act, warn = "🔴 今天：賣出", "👉 明天開盤 全部清掉、抱現金", ""
+    elif f_now > s_now:                              # 多方持有中
+        head, act = "🟩 今天：續抱", "👉 維持做多，不用動"
+        warn = (f"⚠️ 快接近「賣出」了（差距 {g_old:+.1f}→{diff:+.1f} 收窄中），留意"
+                if narrowing else "")
+    else:                                            # 空手中
+        head, act = "⬜ 今天：空手", "👉 維持現金、不要進場"
+        warn = (f"⚠️ 快接近「買進」了（差距 {g_old:+.1f}→{diff:+.1f} 收窄中），留意"
+                if narrowing else "")
+
+    msg = (f"📈 0050 操作訊號｜{dates[i]}\n\n"
+           f"{head}\n{act}\n"
+           + (f"\n{warn}\n" if warn else "")
+           + f"\n（參考：十日線{f_now:.1f}／月線{s_now:.1f}｜來源 {source}）")
     send_line(msg, dry=dry)
 
 
