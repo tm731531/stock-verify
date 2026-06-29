@@ -1,0 +1,8 @@
+# 音檔/影片原始檔太大,不進 repo(只保留 Whisper 轉出的 .txt/.srt 文字)
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.mkv
+# 執行期 log
+*.log
